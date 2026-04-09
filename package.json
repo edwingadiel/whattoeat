@@ -1,0 +1,21 @@
+{
+  "name": "whattoeat",
+  "version": "1.0.0",
+  "description": "WhatToEat is an iOS-first restaurant recommendation app for one job:",
+  "scripts": {
+    "supabase:init": "supabase init",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:db:reset": "supabase db reset",
+    "supabase:db:push": "supabase db push",
+    "supabase:functions:serve": "supabase functions serve --env-file .env.local",
+    "test:ios": "xcodebuild test -project WhatToEat.xcodeproj -scheme WhatToEat -destination 'platform=iOS Simulator,id=FD2F97EC-1502-4207-9339-07488BB2521C'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "supabase": "^2.88.1"
+  }
+}

@@ -1,0 +1,201 @@
+insert into restaurants (id, name, region, active)
+values
+  ('mcdonalds', 'McDonald''s', 'US/PR', true),
+  ('wendys', 'Wendy''s', 'US/PR', true),
+  ('tacobell', 'Taco Bell', 'US/PR', true),
+  ('subway', 'Subway', 'US/PR', true),
+  ('chipotle', 'Chipotle', 'US/PR', true),
+  ('chickfila', 'Chick-fil-A', 'US/PR', true)
+on conflict (id) do update set
+  name = excluded.name,
+  region = excluded.region,
+  active = excluded.active;
+
+insert into restaurant_items (
+  id,
+  restaurant_id,
+  name,
+  category,
+  serving_description,
+  calories,
+  protein,
+  carbs,
+  fat,
+  sodium_nullable,
+  source_version,
+  source_url,
+  contexts,
+  tags,
+  popularity_prior,
+  active
+)
+values
+  (
+    'mcd_artisan_grilled',
+    'mcdonalds',
+    'Grilled Chicken Sandwich',
+    'Sandwich',
+    'Grilled chicken on artisan roll',
+    380,
+    36,
+    44,
+    7,
+    980,
+    '2026-04-curated',
+    'https://www.mcdonalds.com/us/en-us/about-our-food/nutrition-calculator.html',
+    array['lunch', 'dinner', 'post-workout'],
+    array['high-protein'],
+    0.74,
+    true
+  ),
+  (
+    'wendys_grilled_chicken',
+    'wendys',
+    'Grilled Chicken Sandwich',
+    'Sandwich',
+    'Grilled chicken sandwich with lettuce and tomato',
+    370,
+    34,
+    36,
+    9,
+    1110,
+    '2026-04-curated',
+    'https://www.wendys.com/en-uk/nutrition-allergens',
+    array['lunch', 'dinner', 'post-workout'],
+    array['high-protein'],
+    0.80,
+    true
+  ),
+  (
+    'taco_power_menu_bowl',
+    'tacobell',
+    'Power Menu Bowl Chicken',
+    'Bowl',
+    'Chicken bowl with rice, beans, lettuce and guac',
+    470,
+    26,
+    50,
+    18,
+    1230,
+    '2026-04-curated',
+    'https://www.tacobell.com/nutrition/calculator',
+    array['lunch', 'dinner'],
+    array['filling'],
+    0.70,
+    true
+  ),
+  (
+    'subway_oven_roasted_chicken',
+    'subway',
+    'Oven Roasted Chicken Protein Bowl',
+    'Protein Bowl',
+    'Chicken protein bowl with veggies',
+    310,
+    32,
+    14,
+    10,
+    920,
+    '2026-04-curated',
+    'https://www.subway.com/en-us/menunutrition/menu/nutrition',
+    array['lunch', 'dinner', 'post-workout'],
+    array['high-protein', 'low-carb'],
+    0.79,
+    true
+  ),
+  (
+    'chipotle_chicken_bowl',
+    'chipotle',
+    'Chicken Burrito Bowl',
+    'Bowl',
+    'Chicken, rice, fajita veggies, pico',
+    560,
+    42,
+    52,
+    18,
+    980,
+    '2026-04-curated',
+    'https://www.chipotle.com/nutrition-calculator',
+    array['lunch', 'dinner', 'post-workout'],
+    array['high-protein', 'filling'],
+    0.82,
+    true
+  ),
+  (
+    'cfa_grilled_nuggets_12',
+    'chickfila',
+    '12-Count Grilled Nuggets',
+    'Entree',
+    'Grilled nuggets',
+    200,
+    38,
+    2,
+    4,
+    660,
+    '2026-04-curated',
+    'https://www.chick-fil-a.com/nutrition-allergens',
+    array['snack', 'lunch', 'post-workout'],
+    array['high-protein', 'low-carb'],
+    0.88,
+    true
+  )
+on conflict (id) do update set
+  restaurant_id = excluded.restaurant_id,
+  name = excluded.name,
+  category = excluded.category,
+  serving_description = excluded.serving_description,
+  calories = excluded.calories,
+  protein = excluded.protein,
+  carbs = excluded.carbs,
+  fat = excluded.fat,
+  sodium_nullable = excluded.sodium_nullable,
+  source_version = excluded.source_version,
+  source_url = excluded.source_url,
+  contexts = excluded.contexts,
+  tags = excluded.tags,
+  popularity_prior = excluded.popularity_prior,
+  active = excluded.active;
+
+insert into item_modifications (
+  id,
+  restaurant_item_id,
+  modification_name,
+  calorie_delta,
+  protein_delta,
+  carbs_delta,
+  fat_delta
+)
+values
+  (
+    'mcd_extra_patty',
+    'mcd_artisan_grilled',
+    'Add extra grilled chicken',
+    110,
+    18,
+    0,
+    2
+  ),
+  (
+    'subway_extra_chicken',
+    'subway_oven_roasted_chicken',
+    'Extra chicken',
+    60,
+    11,
+    1,
+    1
+  ),
+  (
+    'chipotle_light_rice',
+    'chipotle_chicken_bowl',
+    'Light rice',
+    -80,
+    0,
+    -15,
+    0
+  )
+on conflict (id) do update set
+  restaurant_item_id = excluded.restaurant_item_id,
+  modification_name = excluded.modification_name,
+  calorie_delta = excluded.calorie_delta,
+  protein_delta = excluded.protein_delta,
+  carbs_delta = excluded.carbs_delta,
+  fat_delta = excluded.fat_delta;

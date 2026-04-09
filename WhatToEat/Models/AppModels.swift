@@ -1,0 +1,251 @@
+import Foundation
+
+enum MealContext: String, Codable, CaseIterable, Identifiable, Sendable {
+    case breakfast
+    case lunch
+    case dinner
+    case snack
+    case postWorkout = "post-workout"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .breakfast: "Breakfast"
+        case .lunch: "Lunch"
+        case .dinner: "Dinner"
+        case .snack: "Snack"
+        case .postWorkout: "Post-Workout"
+        }
+    }
+}
+
+enum DietFlag: String, Codable, CaseIterable, Identifiable, Sendable {
+    case vegetarian
+    case dairyFree = "dairy-free"
+    case glutenAware = "gluten-aware"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .vegetarian: "Vegetarian"
+        case .dairyFree: "Dairy-Free"
+        case .glutenAware: "Gluten-Aware"
+        }
+    }
+}
+
+enum FeedbackReason: String, Codable, CaseIterable, Identifiable, Sendable {
+    case goodPick = "good-pick"
+    case tooManyCalories = "too-many-calories"
+    case notEnoughProtein = "not-enough-protein"
+    case wouldNotEat = "would-not-eat"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .goodPick: "Good Pick"
+        case .tooManyCalories: "Too Many Calories"
+        case .notEnoughProtein: "Not Enough Protein"
+        case .wouldNotEat: "Wouldn't Eat This"
+        }
+    }
+}
+
+enum NutritionGoal: String, Codable, CaseIterable, Identifiable, Sendable {
+    case cut
+    case maintenance
+    case gain
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .cut: "Cut"
+        case .maintenance: "Maintain"
+        case .gain: "Gain"
+        }
+    }
+}
+
+struct UserProfile: Codable, Equatable, Sendable {
+    var userID: String
+    var goal: NutritionGoal
+    var calorieTargetDefault: Int
+    var proteinTargetDefault: Int
+    var dietFlags: [DietFlag]
+    var dislikedFoods: [String]
+
+    static func `default`(userID: String) -> UserProfile {
+        UserProfile(
+            userID: userID,
+            goal: .maintenance,
+            calorieTargetDefault: 550,
+            proteinTargetDefault: 35,
+            dietFlags: [],
+            dislikedFoods: []
+        )
+    }
+}
+
+struct UserEntitlement: Codable, Equatable, Sendable {
+    var isPlus: Bool
+    var planName: String
+    var providerCustomerID: String?
+
+    static let free = UserEntitlement(isPlus: false, planName: "Free", providerCustomerID: nil)
+    static let plus = UserEntitlement(isPlus: true, planName: "Plus", providerCustomerID: "local-plus-user")
+}
+
+struct Restaurant: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let region: String
+    let active: Bool
+}
+
+struct ItemModification: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let modificationName: String
+    let calorieDelta: Int
+    let proteinDelta: Int
+    let carbsDelta: Int
+    let fatDelta: Int
+}
+
+struct RestaurantItem: Codable, Identifiable, Hashable, Sendable {
+    let id: String
+    let restaurantID: String
+    let name: String
+    let category: String
+    let servingDescription: String
+    let calories: Int
+    let protein: Int
+    let carbs: Int
+    let fat: Int
+    let sodium: Int?
+    let sourceVersion: String
+    let active: Bool
+    let contexts: [MealContext]
+    let tags: [String]
+    let popularityPrior: Double
+    let sourceURL: String
+    let modifications: [ItemModification]
+}
+
+struct RestaurantCatalog: Codable, Sendable {
+    let restaurants: [Restaurant]
+    let items: [RestaurantItem]
+
+    var activeRestaurants: [Restaurant] {
+        restaurants.filter(\.active)
+    }
+
+    func restaurant(for id: String) -> Restaurant? {
+        restaurants.first(where: { $0.id == id })
+    }
+
+    static var fallback: RestaurantCatalog {
+        RestaurantCatalog(
+            restaurants: [
+                Restaurant(id: "chipotle", name: "Chipotle", region: "US/PR", active: true)
+            ],
+            items: [
+                RestaurantItem(
+                    id: "chipotle_chicken_bowl",
+                    restaurantID: "chipotle",
+                    name: "Chicken Burrito Bowl",
+                    category: "Entree",
+                    servingDescription: "Chicken, rice, fajita veggies, pico",
+                    calories: 560,
+                    protein: 42,
+                    carbs: 52,
+                    fat: 18,
+                    sodium: 980,
+                    sourceVersion: "2026-04-curated",
+                    active: true,
+                    contexts: [.lunch, .dinner, .postWorkout],
+                    tags: ["high-protein", "filling"],
+                    popularityPrior: 0.82,
+                    sourceURL: "https://www.chipotle.com/nutrition-calculator",
+                    modifications: [
+                        ItemModification(
+                            id: "extra_fajita",
+                            modificationName: "Extra fajita veggies",
+                            calorieDelta: 20,
+                            proteinDelta: 1,
+                            carbsDelta: 4,
+                            fatDelta: 0
+                        )
+                    ]
+                )
+            ]
+        )
+    }
+}
+
+struct RecommendationQuery: Codable, Equatable, Hashable, Sendable {
+    var targetCalories: Int
+    var targetProtein: Int
+    var targetCarbs: Int?
+    var targetFat: Int?
+    var context: MealContext?
+    var restaurantIDs: [String]
+}
+
+struct RecommendationResult: Identifiable, Equatable, Hashable, Sendable {
+    let id: String
+    let restaurant: Restaurant
+    let item: RestaurantItem
+    let explanation: String
+    let score: Double
+    let isNearMatch: Bool
+    let premiumFieldsLocked: Bool
+}
+
+struct RecommendationResponse: Identifiable, Equatable, Hashable, Sendable {
+    let id = UUID()
+    let query: RecommendationQuery
+    let topRecommendations: [RecommendationResult]
+    let alternateRecommendations: [RecommendationResult]
+    let guidance: String?
+    let usedExpandedTolerance: Bool
+}
+
+struct SearchHistoryEntry: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let query: RecommendationQuery
+    let topResultName: String
+    let createdAt: Date
+}
+
+struct UserFeedback: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let itemID: String
+    let reason: FeedbackReason
+    let createdAt: Date
+}
+
+enum PaywallReason: String, Identifiable, Sendable {
+    case dailySearchLimit
+    case favoritesLimit
+    case advancedMacros
+    case advancedFilters
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .dailySearchLimit:
+            "Unlock unlimited searches"
+        case .favoritesLimit:
+            "Unlock unlimited favorites"
+        case .advancedMacros:
+            "Unlock carbs and fat targeting"
+        case .advancedFilters:
+            "Unlock advanced recommendation controls"
+        }
+    }
+}

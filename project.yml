@@ -1,0 +1,61 @@
+name: WhatToEat
+options:
+  createIntermediateGroups: true
+  defaultConfig: Debug
+settings:
+  base:
+    PRODUCT_BUNDLE_IDENTIFIER: com.sarasarai.whattoeat
+    SWIFT_VERSION: 6.0
+    CODE_SIGN_STYLE: Automatic
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: 1.0
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift.git
+    from: 2.43.1
+targets:
+  WhatToEat:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    configFiles:
+      Debug: WhatToEat/Support/Debug.xcconfig
+      Release: WhatToEat/Support/Release.xcconfig
+    sources:
+      - path: WhatToEat
+        excludes:
+          - Resources/restaurant_seed.json
+    resources:
+      - path: WhatToEat/Resources
+    info:
+      path: WhatToEat/Support/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        CFBundleDisplayName: WhatToEat
+        LSRequiresIPhoneOS: true
+        SUPABASE_URL: $(SUPABASE_URL)
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+    dependencies:
+      - package: Supabase
+        product: Supabase
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: 1
+        PRODUCT_NAME: WhatToEat
+        GENERATE_INFOPLIST_FILE: false
+  WhatToEatTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - WhatToEatTests
+    dependencies:
+      - target: WhatToEat
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: com.sarasarai.whattoeat.tests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/WhatToEat.app/WhatToEat
