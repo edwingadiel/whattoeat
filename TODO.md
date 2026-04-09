@@ -9,6 +9,7 @@ Last updated: 2026-04-09
 - Served recommendations persisted for each search
 - Feedback links to `recommendation_id` when available
 - Supabase sync wired for `recommendations_served` table
+- RLS insert policy added so authenticated users can write served rows for their own queries
 
 ### RevenueCat integration (P1 — DONE)
 
@@ -63,25 +64,57 @@ Last updated: 2026-04-09
 - Staggered card entrance animations on ResultsView (spring with delay per card)
 - Fade + slide transitions for recommendation cards
 
+### Scenario-based context tags (P2 — DONE)
+
+- Added new `MealContext` cases: `driveThru`, `cheap`, `noCook`, `mealPrep`, `latenight`
+- Each context has a dedicated SF Symbol icon (`car.fill`, `dollarsign.circle.fill`, etc.)
+- HomeView "Scenario" picker uses `ContextPillButton` with icon + label
+- All 24 catalog items tagged with appropriate scenario contexts in `restaurant_seed.json`
+- Recommendation engine scoring rewards items matching the requested scenario
+- Context-specific explanations ("Cheap and filling", "Lights-out fuel", "Bulk-friendly meal prep", etc.)
+
+### Enhanced recommendation scoring (P2 — DONE)
+
+- Composite weights now: 35% calorie match, 30% protein match, 10% context fit, 10% preferences, 5% popularity, 5% protein density, 5% satiety, plus secondary macro bonuses
+- `proteinDensityBonus` rewards items with high protein-per-calorie (target ≥0.08g/cal)
+- `satietyBonus` favors items with high protein, moderate fat, and low refined carbs
+- Feedback weighting: `wouldNotEat` heavily penalizes; `goodPick` boosts
+- Disliked-foods filter substring-matches item names against profile dislikes
+- Vegetarian/vegan/glutenAware diet flags filter out incompatible items
+- 9 unit tests cover scoring, filtering, feedback weighting, favorites boost, expanded tolerance, and empty results
+
+### Fast food intelligence — modification suggestions (P2 — DONE)
+
+- `RecommendationDetailView` rewritten with interactive "Make it better" section
+- Each modification (e.g., "Sub brown rice", "No mayo", "Grilled instead of crispy") displays its delta on cal/protein/carbs/fat
+- Tap a modification to toggle it; nutrition card switches to "Modified nutrition" with live macro updates
+- Reset button clears all selections
+- Protein density badge shown on items with ≥0.07 g/cal ("HIGH PROTEIN DENSITY")
+
+### Catalog source-of-truth pipeline (P1 — DONE)
+
+- `scripts/sync_catalog.js` generates Supabase seed SQL from `WhatToEat/Resources/restaurant_seed.json`
+- `restaurant_seed.json` is now the single source of truth
+- Script supports `--dry-run` (stdout) and `--output <path>` (custom file)
+- Default output: `supabase/seed.sql`
+- Run with `node scripts/sync_catalog.js` whenever the catalog changes
+
+### Sync coordinator extraction (P2 — DONE)
+
+- New `WhatToEat/Core/SyncCoordinator.swift` owns all remote sync orchestration
+- `AppStore` no longer holds private sync* methods — delegates to `syncCoordinator`
+- Coordinator surfaces `bootstrap`, `syncProfile`, `syncFavorites`, `syncHistoryEntry`, `syncFeedbackEntry`, `syncServedRecommendations`, `seedRemoteStateIfNeeded`
+- `remoteSyncEnabled` is now a computed property reading from the coordinator
+- AppStore is significantly slimmer and easier to test
+
+### Bug fixes (DONE)
+
+- `AppTheme.Color(hex:)` no longer uses deprecated `Scanner.scanHexInt64`
+- Removed dead `purchase()` and `restore()` methods from `ProfileViewModel`
+- `recommendations_served` had only a SELECT policy — added `recommendations_insert_own`
+- Integration test was creating a feedback entry but never persisting it before assertions — fixed
+
 ## Remaining
-
-### Decide catalog source of truth (P1)
-
-Open question:
-
-- Should the restaurant catalog stay local JSON for MVP simplicity?
-- Or move to Supabase for centralized updates?
-
-Recommended short-term path:
-
-- Keep local JSON for app recommendations
-- Build a script or pipeline to generate Supabase seed from the same source
-
-Tasks:
-
-- Document one source of truth
-- Remove duplicated divergence risk between JSON and SQL seed
-- Decide whether app reads catalog locally, remotely, or hybrid
 
 ### Add query count sync strategy (P2)
 
@@ -151,16 +184,6 @@ Useful future tests:
 - Query persistence order
 - Feedback merge behavior
 - Favorites replacement after toggle/remove cycles
-
-### Refactor sync boundaries if needed
-
-Current state:
-
-- `AppStore` owns a lot of orchestration
-
-Potential improvement:
-
-- Extract a dedicated sync coordinator if remote logic grows further
 
 ## Nice-to-have later
 

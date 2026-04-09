@@ -54,8 +54,7 @@ enum AppTheme {
 extension Color {
     init(hex: String) {
         let sanitized = hex.replacingOccurrences(of: "#", with: "")
-        var value: UInt64 = 0
-        Scanner(string: sanitized).scanHexInt64(&value)
+        let value = UInt64(sanitized, radix: 16) ?? 0
         let red = Double((value & 0xFF0000) >> 16) / 255
         let green = Double((value & 0x00FF00) >> 8) / 255
         let blue = Double(value & 0x0000FF) / 255

@@ -9,11 +9,11 @@ final class AppStore: ObservableObject {
     @Published var history: [SearchHistoryEntry]
     @Published var hasCompletedOnboarding: Bool
     @Published var activePaywallReason: PaywallReason?
-    @Published var remoteSyncEnabled = false
     @Published var offerings: [ProductOffering] = [.defaultMonthly, .defaultAnnual]
     @Published var isPurchasing = false
     @Published var purchaseError: String?
 
+    var remoteSyncEnabled: Bool { syncCoordinator.isRemoteSyncEnabled }
     var analyticsEnabled: Bool { environment.analytics is PostHogAnalyticsService }
     var crashReportingEnabled: Bool { environment.crashReporter is SentryCrashReporter }
     var subscriptionsEnabled: Bool { environment.subscriptions is RevenueCatSubscriptionService }
@@ -23,10 +23,16 @@ final class AppStore: ObservableObject {
 
     private let environment: AppEnvironment
     private let persistence = LocalPersistenceStore()
+    private let syncCoordinator: SyncCoordinator
     private var hasBootstrappedRemote = false
 
     init(environment: AppEnvironment) {
         self.environment = environment
+        self.syncCoordinator = SyncCoordinator(
+            remoteSync: environment.remoteSync,
+            crashReporter: environment.crashReporter
+        )
+
         let userID = environment.auth.anonymousUserID()
         self.profile = persistence.loadProfile(for: userID) ?? UserProfile.default(userID: userID)
         self.entitlement = environment.subscriptions.currentEntitlement()
@@ -55,49 +61,53 @@ final class AppStore: ObservableObject {
         catalog.activeRestaurants
     }
 
+    // MARK: - Bootstrap
+
     func bootstrap() async {
         guard !hasBootstrappedRemote else { return }
         hasBootstrappedRemote = true
 
         identifyUser()
 
-        guard let remoteSync = environment.remoteSync else { return }
+        guard let snapshot = await syncCoordinator.bootstrap(localProfile: profile) else { return }
 
-        do {
-            let snapshot = try await remoteSync.bootstrap(localProfile: profile)
-            remoteSyncEnabled = true
-            identifyUser()
+        identifyUser()
 
-            if snapshot.userID != profile.userID {
-                profile.userID = snapshot.userID
-                persistence.saveProfile(profile)
-            }
-
-            if let remoteProfile = snapshot.profile {
-                profile = remoteProfile
-                persistence.saveProfile(remoteProfile)
-            }
-
-            if !snapshot.favoriteItemIDs.isEmpty {
-                favorites = Set(snapshot.favoriteItemIDs)
-                persistence.saveFavorites(Array(favorites))
-            }
-
-            if !snapshot.historyEntries.isEmpty {
-                history = mergeHistory(local: history, remote: snapshot.historyEntries)
-                persistence.saveHistory(history)
-            }
-
-            if !snapshot.feedbackEntries.isEmpty {
-                feedbackEntries = mergeFeedback(local: feedbackEntries, remote: snapshot.feedbackEntries)
-                persistence.saveFeedback(feedbackEntries)
-            }
-
-            await seedRemoteStateIfNeeded(using: remoteSync, snapshot: snapshot)
-        } catch {
-            environment.crashReporter.capture("Supabase bootstrap failed: \(error.localizedDescription)")
+        if snapshot.userID != profile.userID {
+            profile.userID = snapshot.userID
+            persistence.saveProfile(profile)
         }
+
+        if let remoteProfile = snapshot.profile {
+            profile = remoteProfile
+            persistence.saveProfile(remoteProfile)
+        }
+
+        if !snapshot.favoriteItemIDs.isEmpty {
+            favorites = Set(snapshot.favoriteItemIDs)
+            persistence.saveFavorites(Array(favorites))
+        }
+
+        if !snapshot.historyEntries.isEmpty {
+            history = mergeHistory(local: history, remote: snapshot.historyEntries)
+            persistence.saveHistory(history)
+        }
+
+        if !snapshot.feedbackEntries.isEmpty {
+            feedbackEntries = mergeFeedback(local: feedbackEntries, remote: snapshot.feedbackEntries)
+            persistence.saveFeedback(feedbackEntries)
+        }
+
+        await syncCoordinator.seedRemoteStateIfNeeded(
+            snapshot: snapshot,
+            userID: profile.userID,
+            favorites: Array(favorites),
+            history: history,
+            feedback: feedbackEntries
+        )
     }
+
+    // MARK: - Computed
 
     var visibleHistory: [SearchHistoryEntry] {
         entitlement.isPlus ? history : Array(history.prefix(5))
@@ -123,6 +133,16 @@ final class AppStore: ObservableObject {
         .sorted { $0.restaurant.name < $1.restaurant.name }
     }
 
+    var searchesUsedToday: Int {
+        persistence.loadSearchesToday().count
+    }
+
+    var searchesRemainingToday: Int {
+        entitlement.isPlus ? .max : max(0, 5 - searchesUsedToday)
+    }
+
+    // MARK: - Profile
+
     func saveProfile(_ updated: UserProfile) {
         profile = updated
         hasCompletedOnboarding = true
@@ -136,17 +156,10 @@ final class AppStore: ObservableObject {
             "has_dislikes": updated.dislikedFoods.isEmpty ? "false" : "true"
         ])
 
-        if let remoteSync = environment.remoteSync {
-            let profileToSave = updated
-            Task {
-                do {
-                    try await remoteSync.saveProfile(profileToSave)
-                } catch {
-                    self.environment.crashReporter.capture("Failed saving remote profile: \(error.localizedDescription)")
-                }
-            }
-        }
+        syncCoordinator.syncProfile(updated)
     }
+
+    // MARK: - Search
 
     func search(query: RecommendationQuery) -> RecommendationResponse? {
         let todayCount = persistence.loadSearchesToday().count
@@ -206,8 +219,8 @@ final class AppStore: ObservableObject {
         history.insert(historyEntry, at: 0)
         persistence.saveHistory(history)
         persistence.recordSearch(Date())
-        syncHistoryEntryIfPossible(historyEntry)
-        syncServedRecommendationsIfPossible(servedRecords)
+        syncCoordinator.syncHistoryEntry(userID: profile.userID, entry: historyEntry)
+        syncCoordinator.syncServedRecommendations(servedRecords)
 
         environment.analytics.track("query_submitted", properties: [
             "target_calories": "\(query.targetCalories)",
@@ -226,11 +239,13 @@ final class AppStore: ObservableObject {
         return response
     }
 
+    // MARK: - Favorites
+
     func toggleFavorite(itemID: String) {
         if favorites.contains(itemID) {
             favorites.remove(itemID)
             persistence.saveFavorites(Array(favorites))
-            syncFavoritesIfPossible()
+            syncCoordinator.syncFavorites(userID: profile.userID, itemIDs: Array(favorites))
             return
         }
 
@@ -243,14 +258,16 @@ final class AppStore: ObservableObject {
         favorites.insert(itemID)
         persistence.saveFavorites(Array(favorites))
         environment.analytics.track("favorite_added", properties: ["item_id": itemID])
-        syncFavoritesIfPossible()
+        syncCoordinator.syncFavorites(userID: profile.userID, itemIDs: Array(favorites))
     }
+
+    // MARK: - Feedback
 
     func submitFeedback(for itemID: String, recommendationID: UUID? = nil, reason: FeedbackReason) {
         let entry = UserFeedback(id: UUID(), itemID: itemID, recommendationID: recommendationID, reason: reason, createdAt: Date())
         feedbackEntries.insert(entry, at: 0)
         persistence.saveFeedback(feedbackEntries)
-        syncFeedbackEntryIfPossible(entry)
+        syncCoordinator.syncFeedbackEntry(userID: profile.userID, entry: entry)
         environment.analytics.track("feedback_submitted", properties: [
             "reason": reason.rawValue,
             "item_id": itemID,
@@ -268,11 +285,20 @@ final class AppStore: ObservableObject {
         ])
     }
 
+    // MARK: - Paywall
+
     func requestAdvancedMacros() {
         guard !entitlement.isPlus else { return }
         activePaywallReason = .advancedMacros
         environment.analytics.track("paywall_viewed", properties: ["reason": PaywallReason.advancedMacros.rawValue])
     }
+
+    func dismissPaywall() {
+        activePaywallReason = nil
+        purchaseError = nil
+    }
+
+    // MARK: - Purchases
 
     func loadOfferings() async {
         let fetched = await environment.subscriptions.fetchOfferings()
@@ -322,18 +348,7 @@ final class AppStore: ObservableObject {
         isPurchasing = false
     }
 
-    func dismissPaywall() {
-        activePaywallReason = nil
-        purchaseError = nil
-    }
-
-    var searchesUsedToday: Int {
-        persistence.loadSearchesToday().count
-    }
-
-    var searchesRemainingToday: Int {
-        entitlement.isPlus ? .max : max(0, 5 - searchesUsedToday)
-    }
+    // MARK: - Private
 
     private func identifyUser() {
         let userID = profile.userID
@@ -346,80 +361,6 @@ final class AppStore: ObservableObject {
         }
         if let sentry = environment.crashReporter as? SentryCrashReporter {
             sentry.identify(userID: userID)
-        }
-    }
-
-    private func syncFavoritesIfPossible() {
-        guard let remoteSync = environment.remoteSync, remoteSyncEnabled else { return }
-        let currentUserID = profile.userID
-        let currentFavorites = Array(favorites)
-
-        Task {
-            do {
-                try await remoteSync.replaceFavorites(userID: currentUserID, itemIDs: currentFavorites)
-            } catch {
-                self.environment.crashReporter.capture("Failed syncing favorites: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func syncHistoryEntryIfPossible(_ entry: SearchHistoryEntry) {
-        guard let remoteSync = environment.remoteSync, remoteSyncEnabled else { return }
-        let currentUserID = profile.userID
-
-        Task {
-            do {
-                try await remoteSync.saveHistoryEntry(userID: currentUserID, entry: entry)
-            } catch {
-                self.environment.crashReporter.capture("Failed syncing history entry: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func syncServedRecommendationsIfPossible(_ recommendations: [ServedRecommendation]) {
-        guard let remoteSync = environment.remoteSync, remoteSyncEnabled else { return }
-
-        Task {
-            do {
-                try await remoteSync.saveServedRecommendations(recommendations)
-            } catch {
-                self.environment.crashReporter.capture("Failed syncing served recommendations: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func syncFeedbackEntryIfPossible(_ entry: UserFeedback) {
-        guard let remoteSync = environment.remoteSync, remoteSyncEnabled else { return }
-        let currentUserID = profile.userID
-
-        Task {
-            do {
-                try await remoteSync.saveFeedbackEntry(userID: currentUserID, entry: entry)
-            } catch {
-                self.environment.crashReporter.capture("Failed syncing feedback entry: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func seedRemoteStateIfNeeded(using remoteSync: any RemoteUserSyncing, snapshot: RemoteBootstrapSnapshot) async {
-        do {
-            if snapshot.favoriteItemIDs.isEmpty, !favorites.isEmpty {
-                try await remoteSync.replaceFavorites(userID: profile.userID, itemIDs: Array(favorites))
-            }
-
-            if snapshot.historyEntries.isEmpty, !history.isEmpty {
-                for entry in history {
-                    try await remoteSync.saveHistoryEntry(userID: profile.userID, entry: entry)
-                }
-            }
-
-            if snapshot.feedbackEntries.isEmpty, !feedbackEntries.isEmpty {
-                for entry in feedbackEntries {
-                    try await remoteSync.saveFeedbackEntry(userID: profile.userID, entry: entry)
-                }
-            }
-        } catch {
-            environment.crashReporter.capture("Failed seeding remote state: \(error.localizedDescription)")
         }
     }
 

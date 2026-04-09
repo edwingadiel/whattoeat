@@ -67,6 +67,7 @@ final class SupabaseSyncIntegrationTests: XCTestCase {
             reason: .goodPick,
             createdAt: Date()
         )
+        try await service.saveFeedbackEntry(userID: userID, entry: feedbackEntry)
 
         let remoteProfile = try await service.fetchProfileForDebug(userID: userID)
         let remoteFavorites = try await service.fetchFavoritesForDebug(userID: userID)

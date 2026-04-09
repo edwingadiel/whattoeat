@@ -19,12 +19,4 @@ final class ProfileViewModel: ObservableObject {
     var isPurchasing: Bool {
         store.isPurchasing
     }
-
-    func purchase() {
-        Task { await store.purchase(.plusMonthly) }
-    }
-
-    func restore() {
-        Task { await store.restorePurchases() }
-    }
 }

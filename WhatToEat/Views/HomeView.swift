@@ -104,11 +104,14 @@ struct HomeView: View {
                             Image(systemName: "clock.fill")
                                 .foregroundStyle(AppTheme.teal)
                                 .font(.subheadline)
-                            Text("When")
+                            Text("Scenario")
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                         }
                         FlowLayout(items: MealContext.allCases) { context in
-                            PillButton(title: context.title, isSelected: viewModel.selectedContext == context) {
+                            ContextPillButton(
+                                context: context,
+                                isSelected: viewModel.selectedContext == context
+                            ) {
                                 viewModel.selectedContext = viewModel.selectedContext == context ? nil : context
                             }
                         }

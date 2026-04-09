@@ -110,8 +110,17 @@ create policy "queries_own" on queries
 for all using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
-create policy "recommendations_own" on recommendations_served
+create policy "recommendations_select_own" on recommendations_served
 for select using (
+  exists (
+    select 1 from queries
+    where queries.id = recommendations_served.query_id
+      and queries.user_id = auth.uid()
+  )
+);
+
+create policy "recommendations_insert_own" on recommendations_served
+for insert with check (
   exists (
     select 1 from queries
     where queries.id = recommendations_served.query_id

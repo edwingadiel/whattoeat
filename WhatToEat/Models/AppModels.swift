@@ -6,6 +6,11 @@ enum MealContext: String, Codable, CaseIterable, Identifiable, Sendable {
     case dinner
     case snack
     case postWorkout = "post-workout"
+    case latenight
+    case driveThru = "drive-thru"
+    case cheap
+    case noCook = "no-cook"
+    case mealPrep = "meal-prep"
 
     var id: String { rawValue }
 
@@ -16,6 +21,26 @@ enum MealContext: String, Codable, CaseIterable, Identifiable, Sendable {
         case .dinner: "Dinner"
         case .snack: "Snack"
         case .postWorkout: "Post-Workout"
+        case .latenight: "Late Night"
+        case .driveThru: "Drive-Thru"
+        case .cheap: "Cheap"
+        case .noCook: "No Cook"
+        case .mealPrep: "Meal Prep"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .breakfast: "sunrise.fill"
+        case .lunch: "sun.max.fill"
+        case .dinner: "moon.fill"
+        case .snack: "carrot.fill"
+        case .postWorkout: "dumbbell.fill"
+        case .latenight: "moon.stars.fill"
+        case .driveThru: "car.fill"
+        case .cheap: "dollarsign.circle.fill"
+        case .noCook: "hand.raised.slash.fill"
+        case .mealPrep: "takeoutbag.and.cup.and.straw.fill"
         }
     }
 }

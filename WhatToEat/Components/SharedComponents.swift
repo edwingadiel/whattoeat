@@ -132,6 +132,37 @@ struct RecommendationCard: View {
     }
 }
 
+struct ContextPillButton: View {
+    let context: MealContext
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: context.icon)
+                    .font(.system(size: 11, weight: .bold))
+                Text(context.title)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(isSelected ? Color.white : AppTheme.ink)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(isSelected ? AppTheme.teal : Color.white.opacity(0.85))
+                    .shadow(color: isSelected ? AppTheme.teal.opacity(0.3) : .clear, radius: 6, y: 2)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(isSelected ? .clear : AppTheme.border, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .animation(.easeOut(duration: 0.2), value: isSelected)
+    }
+}
+
 struct SectionHeader: View {
     let title: String
     var subtitle: String?

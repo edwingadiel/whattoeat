@@ -106,12 +106,16 @@ struct RecommendationEngine {
             let preferenceScore = preferenceFit(item: item, favorites: favorites, feedback: feedback)
             let popularityScore = item.popularityPrior
             let macroBonus = macroBonus(item: item, query: query, isPlus: isPlus)
+            let densityBonus = proteinDensityBonus(item: item)
+            let satietyBonus = satietyBonus(item: item)
 
-            let totalScore = (0.40 * calorieScore)
-                + (0.35 * proteinScore)
+            let totalScore = (0.35 * calorieScore)
+                + (0.30 * proteinScore)
                 + (0.10 * contextScore)
                 + (0.10 * preferenceScore)
                 + (0.05 * popularityScore)
+                + (0.05 * densityBonus)
+                + (0.05 * satietyBonus)
                 + macroBonus
 
             return RecommendationResult(
@@ -123,7 +127,9 @@ struct RecommendationEngine {
                     query: query,
                     favorites: favorites,
                     feedback: feedback,
-                    isExpanded: isExpanded
+                    isExpanded: isExpanded,
+                    densityBonus: densityBonus,
+                    satietyBonus: satietyBonus
                 ),
                 score: totalScore,
                 isNearMatch: isExpanded && !(withinExactTolerance(item: item, query: query)),
@@ -138,6 +144,8 @@ struct RecommendationEngine {
             return lhs.score > rhs.score
         }
     }
+
+    // MARK: - Scoring helpers
 
     private func normalizedDistance(from value: Int, target: Int) -> Double {
         guard target > 0 else { return 0 }
@@ -157,15 +165,35 @@ struct RecommendationEngine {
             score += 0.35
         }
         let relevantFeedback = feedback.filter { $0.itemID == item.id }
-        for entry in relevantFeedback.prefix(3) {
+        for entry in relevantFeedback.prefix(5) {
             switch entry.reason {
             case .goodPick:
-                score += 0.12
-            case .tooManyCalories, .notEnoughProtein, .wouldNotEat:
-                score -= 0.12
+                score += 0.15
+            case .tooManyCalories, .notEnoughProtein:
+                score -= 0.10
+            case .wouldNotEat:
+                score -= 0.25
             }
         }
         return min(max(score, 0), 1)
+    }
+
+    /// Protein per calorie — rewards high-protein-density options.
+    private func proteinDensityBonus(item: RestaurantItem) -> Double {
+        guard item.calories > 0 else { return 0 }
+        let proteinPerCal = Double(item.protein) / Double(item.calories)
+        // Excellent: >=0.08 g/cal (38g protein per 475 cal)
+        // Good: 0.05-0.08
+        // Below average: < 0.05
+        return min(proteinPerCal / 0.08, 1.0)
+    }
+
+    /// Satiety estimate based on protein + fiber proxy (high protein + moderate carbs = filling).
+    private func satietyBonus(item: RestaurantItem) -> Double {
+        let proteinRatio = min(Double(item.protein) / 40.0, 1.0)
+        let fatRatio = min(Double(item.fat) / 25.0, 1.0) * 0.5
+        let carbPenalty = item.carbs > 60 ? -0.15 : 0.0
+        return min(max(proteinRatio + fatRatio + carbPenalty, 0), 1)
     }
 
     private func macroBonus(item: RestaurantItem, query: RecommendationQuery, isPlus: Bool) -> Double {
@@ -180,12 +208,16 @@ struct RecommendationEngine {
         return bonus
     }
 
+    // MARK: - Explanation
+
     private func buildExplanation(
         item: RestaurantItem,
         query: RecommendationQuery,
         favorites: Set<String>,
         feedback: [UserFeedback],
-        isExpanded: Bool
+        isExpanded: Bool,
+        densityBonus: Double,
+        satietyBonus: Double
     ) -> String {
         if favorites.contains(item.id) {
             return "Close to your target and matches a pick you already trust."
@@ -195,6 +227,21 @@ struct RecommendationEngine {
         }
         if feedback.contains(where: { $0.itemID == item.id && $0.reason == .goodPick }) {
             return "You reacted well to this before, and it still fits today's target."
+        }
+        if let context = query.context, context == .cheap, item.calories < 400 {
+            return "Budget-friendly pick that stays within your calorie and protein range."
+        }
+        if let context = query.context, context == .latenight {
+            return "Late-night option that won't blow past your macros."
+        }
+        if let context = query.context, context == .mealPrep {
+            return "Great for meal prep — consistent macros you can batch and reheat."
+        }
+        if densityBonus > 0.85 {
+            return "Outstanding protein density — more protein per calorie than most options."
+        }
+        if satietyBonus > 0.8 {
+            return "This should keep you full — high protein and balanced macros."
         }
         if isExpanded {
             return "This is one of the closest fits after widening the calorie and protein range."
