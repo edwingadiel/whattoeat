@@ -6,24 +6,60 @@ struct FavoritesView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Saved picks")
-                            .font(.system(size: 30, weight: .black, design: .rounded))
-                            .foregroundStyle(AppTheme.ink)
-                        Text("Keep a short list of meals that reliably work.")
-                            .font(.system(.body, design: .rounded))
-                            .foregroundStyle(AppTheme.mutedInk)
+                VStack(alignment: .leading, spacing: 20) {
+                    SectionHeader(
+                        title: "Saved picks",
+                        subtitle: "Meals that reliably work for you."
+                    )
+                    .padding(.top, 12)
+
+                    if !store.entitlement.isPlus {
+                        HStack(spacing: 10) {
+                            Image(systemName: "bookmark.fill")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.accent)
+                            Text("\(store.favorites.count)/5 saved")
+                                .font(.system(size: 12, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppTheme.ink)
+                            Spacer()
+                            if store.favorites.count >= 5 {
+                                Text("LIMIT REACHED")
+                                    .font(.system(size: 9, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(AppTheme.warning)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(AppTheme.warning.opacity(0.1)))
+                            }
+                        }
+                        .padding(12)
+                        .cardStyle(fill: AppTheme.accentSoft.opacity(0.4))
                     }
-                    .padding(.top, 20)
 
                     if store.favoriteItems.isEmpty {
-                        Text("Nothing saved yet. Run a search and bookmark anything that feels dependable.")
-                            .font(.system(.body, design: .rounded))
-                            .foregroundStyle(AppTheme.mutedInk)
-                            .padding(20)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .cardStyle()
+                        VStack(spacing: 18) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppTheme.mutedInk.opacity(0.06))
+                                    .frame(width: 80, height: 80)
+                                Image(systemName: "bookmark")
+                                    .font(.system(size: 32, weight: .light))
+                                    .foregroundStyle(AppTheme.mutedInk.opacity(0.35))
+                            }
+
+                            VStack(spacing: 6) {
+                                Text("Nothing saved yet")
+                                    .font(.system(.headline, design: .rounded, weight: .bold))
+                                    .foregroundStyle(AppTheme.ink)
+
+                                Text("Run a search and bookmark anything\nthat feels dependable.")
+                                    .font(.system(.subheadline, design: .rounded))
+                                    .foregroundStyle(AppTheme.mutedInk)
+                                    .multilineTextAlignment(.center)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 48)
+                        .cardStyle()
                     } else {
                         ForEach(store.favoriteItems) { result in
                             NavigationLink {
@@ -38,7 +74,7 @@ struct FavoritesView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .padding(.bottom, 30)
             }
             .background(AppTheme.backgroundGradient.ignoresSafeArea())
         }

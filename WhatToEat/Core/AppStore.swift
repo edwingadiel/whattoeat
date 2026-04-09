@@ -10,6 +10,13 @@ final class AppStore: ObservableObject {
     @Published var hasCompletedOnboarding: Bool
     @Published var activePaywallReason: PaywallReason?
     @Published var remoteSyncEnabled = false
+    @Published var offerings: [ProductOffering] = [.defaultMonthly, .defaultAnnual]
+    @Published var isPurchasing = false
+    @Published var purchaseError: String?
+
+    var analyticsEnabled: Bool { environment.analytics is PostHogAnalyticsService }
+    var crashReportingEnabled: Bool { environment.crashReporter is SentryCrashReporter }
+    var subscriptionsEnabled: Bool { environment.subscriptions is RevenueCatSubscriptionService }
 
     let catalog: RestaurantCatalog
     let engine: RecommendationEngine
@@ -52,11 +59,14 @@ final class AppStore: ObservableObject {
         guard !hasBootstrappedRemote else { return }
         hasBootstrappedRemote = true
 
+        identifyUser()
+
         guard let remoteSync = environment.remoteSync else { return }
 
         do {
             let snapshot = try await remoteSync.bootstrap(localProfile: profile)
             remoteSyncEnabled = true
+            identifyUser()
 
             if snapshot.userID != profile.userID {
                 profile.userID = snapshot.userID
@@ -106,7 +116,8 @@ final class AppStore: ObservableObject {
                 explanation: "Saved because it consistently fits your plan.",
                 score: item.popularityPrior * 100,
                 isNearMatch: false,
-                premiumFieldsLocked: !entitlement.isPlus
+                premiumFieldsLocked: !entitlement.isPlus,
+                servedID: nil
             )
         }
         .sorted { $0.restaurant.name < $1.restaurant.name }
@@ -117,7 +128,13 @@ final class AppStore: ObservableObject {
         hasCompletedOnboarding = true
         persistence.saveProfile(updated)
         persistence.saveHasCompletedOnboarding(true)
-        environment.analytics.track("onboarding_completed", properties: ["goal": updated.goal.rawValue])
+        environment.analytics.track("onboarding_completed", properties: [
+            "goal": updated.goal.rawValue,
+            "calorie_target": "\(updated.calorieTargetDefault)",
+            "protein_target": "\(updated.proteinTargetDefault)",
+            "diet_flags": updated.dietFlags.map(\.rawValue).joined(separator: ","),
+            "has_dislikes": updated.dislikedFoods.isEmpty ? "false" : "true"
+        ])
 
         if let remoteSync = environment.remoteSync {
             let profileToSave = updated
@@ -139,7 +156,7 @@ final class AppStore: ObservableObject {
             return nil
         }
 
-        let response = engine.recommend(
+        var response = engine.recommend(
             query: query,
             profile: profile,
             favorites: favorites,
@@ -155,17 +172,55 @@ final class AppStore: ObservableObject {
             createdAt: Date()
         )
 
+        let allResults = response.topRecommendations + response.alternateRecommendations
+        var servedRecords: [ServedRecommendation] = []
+        var taggedTop = response.topRecommendations
+        var taggedAlternates = response.alternateRecommendations
+
+        for (index, result) in allResults.enumerated() {
+            let served = ServedRecommendation(
+                id: UUID(),
+                queryID: historyEntry.id,
+                restaurantItemID: result.item.id,
+                finalScore: result.score,
+                explanationShort: result.explanation,
+                rankPosition: index + 1
+            )
+            servedRecords.append(served)
+
+            if index < taggedTop.count {
+                taggedTop[index].servedID = served.id
+            } else {
+                taggedAlternates[index - taggedTop.count].servedID = served.id
+            }
+        }
+
+        response = RecommendationResponse(
+            query: response.query,
+            topRecommendations: taggedTop,
+            alternateRecommendations: taggedAlternates,
+            guidance: response.guidance,
+            usedExpandedTolerance: response.usedExpandedTolerance
+        )
+
         history.insert(historyEntry, at: 0)
         persistence.saveHistory(history)
         persistence.recordSearch(Date())
         syncHistoryEntryIfPossible(historyEntry)
+        syncServedRecommendationsIfPossible(servedRecords)
 
         environment.analytics.track("query_submitted", properties: [
             "target_calories": "\(query.targetCalories)",
-            "target_protein": "\(query.targetProtein)"
+            "target_protein": "\(query.targetProtein)",
+            "context": query.context?.rawValue ?? "none",
+            "restaurant_filter_count": "\(query.restaurantIDs.count)",
+            "is_plus": "\(entitlement.isPlus)"
         ])
         environment.analytics.track("recommendations_viewed", properties: [
-            "count": "\(response.topRecommendations.count + response.alternateRecommendations.count)"
+            "top_count": "\(response.topRecommendations.count)",
+            "alternate_count": "\(response.alternateRecommendations.count)",
+            "used_expanded_tolerance": "\(response.usedExpandedTolerance)",
+            "top_result": response.topRecommendations.first?.item.name ?? "none"
         ])
 
         return response
@@ -191,12 +246,26 @@ final class AppStore: ObservableObject {
         syncFavoritesIfPossible()
     }
 
-    func submitFeedback(for itemID: String, reason: FeedbackReason) {
-        let entry = UserFeedback(id: UUID(), itemID: itemID, reason: reason, createdAt: Date())
+    func submitFeedback(for itemID: String, recommendationID: UUID? = nil, reason: FeedbackReason) {
+        let entry = UserFeedback(id: UUID(), itemID: itemID, recommendationID: recommendationID, reason: reason, createdAt: Date())
         feedbackEntries.insert(entry, at: 0)
         persistence.saveFeedback(feedbackEntries)
         syncFeedbackEntryIfPossible(entry)
-        environment.analytics.track("feedback_submitted", properties: ["reason": reason.rawValue])
+        environment.analytics.track("feedback_submitted", properties: [
+            "reason": reason.rawValue,
+            "item_id": itemID,
+            "has_recommendation_id": recommendationID != nil ? "true" : "false"
+        ])
+    }
+
+    func trackRecommendationOpened(result: RecommendationResult) {
+        environment.analytics.track("recommendation_opened", properties: [
+            "item_id": result.item.id,
+            "item_name": result.item.name,
+            "restaurant": result.restaurant.name,
+            "is_near_match": "\(result.isNearMatch)",
+            "is_favorite": "\(favorites.contains(result.id))"
+        ])
     }
 
     func requestAdvancedMacros() {
@@ -205,18 +274,79 @@ final class AppStore: ObservableObject {
         environment.analytics.track("paywall_viewed", properties: ["reason": PaywallReason.advancedMacros.rawValue])
     }
 
-    func purchasePlus() {
-        entitlement = environment.subscriptions.purchasePlus()
-        environment.analytics.track("subscription_started", properties: ["plan": entitlement.planName])
+    func loadOfferings() async {
+        let fetched = await environment.subscriptions.fetchOfferings()
+        offerings = fetched
     }
 
-    func restorePurchases() {
-        entitlement = environment.subscriptions.restorePurchases()
-        environment.analytics.track("subscription_restored", properties: ["plan": entitlement.planName])
+    func purchase(_ product: PurchaseProduct) async {
+        isPurchasing = true
+        purchaseError = nil
+
+        do {
+            let newEntitlement = try await environment.subscriptions.purchase(product)
+            entitlement = newEntitlement
+            environment.analytics.track("subscription_started", properties: [
+                "plan": newEntitlement.planName,
+                "period": newEntitlement.periodType ?? "unknown"
+            ])
+        } catch let error as PurchaseError {
+            switch error {
+            case .cancelled:
+                break
+            default:
+                purchaseError = error.localizedDescription
+                environment.crashReporter.capture("Purchase failed: \(error.localizedDescription)")
+            }
+        } catch {
+            purchaseError = error.localizedDescription
+        }
+
+        isPurchasing = false
+    }
+
+    func restorePurchases() async {
+        isPurchasing = true
+        purchaseError = nil
+
+        do {
+            let restored = try await environment.subscriptions.restorePurchases()
+            entitlement = restored
+            if restored.isPlus {
+                environment.analytics.track("subscription_restored", properties: ["plan": restored.planName])
+            }
+        } catch {
+            purchaseError = error.localizedDescription
+        }
+
+        isPurchasing = false
     }
 
     func dismissPaywall() {
         activePaywallReason = nil
+        purchaseError = nil
+    }
+
+    var searchesUsedToday: Int {
+        persistence.loadSearchesToday().count
+    }
+
+    var searchesRemainingToday: Int {
+        entitlement.isPlus ? .max : max(0, 5 - searchesUsedToday)
+    }
+
+    private func identifyUser() {
+        let userID = profile.userID
+        if let posthog = environment.analytics as? PostHogAnalyticsService {
+            posthog.identify(userID: userID, properties: [
+                "goal": profile.goal.rawValue,
+                "plan": entitlement.planName,
+                "is_plus": entitlement.isPlus ? "true" : "false"
+            ])
+        }
+        if let sentry = environment.crashReporter as? SentryCrashReporter {
+            sentry.identify(userID: userID)
+        }
     }
 
     private func syncFavoritesIfPossible() {
@@ -242,6 +372,18 @@ final class AppStore: ObservableObject {
                 try await remoteSync.saveHistoryEntry(userID: currentUserID, entry: entry)
             } catch {
                 self.environment.crashReporter.capture("Failed syncing history entry: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func syncServedRecommendationsIfPossible(_ recommendations: [ServedRecommendation]) {
+        guard let remoteSync = environment.remoteSync, remoteSyncEnabled else { return }
+
+        Task {
+            do {
+                try await remoteSync.saveServedRecommendations(recommendations)
+            } catch {
+                self.environment.crashReporter.capture("Failed syncing served recommendations: \(error.localizedDescription)")
             }
         }
     }

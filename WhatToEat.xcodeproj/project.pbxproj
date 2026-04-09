@@ -13,6 +13,8 @@
 		31879F893C2A0C7F82E99E64 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BDE217350C382DEE2B965A /* OnboardingView.swift */; };
 		3E4D4F62A6F49C2195D082FA /* SupabaseSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 509CADAC1CAE0E0A3B1504A9 /* SupabaseSyncService.swift */; };
 		56D2FF05E3B9E2DF60FAE23A /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BCF2E37E7BDC3C17F6796F /* FlowLayout.swift */; };
+		5894C9AB32D3365DBB5BACCC /* RevenueCatSubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AFBF287909C05BA38C661EA /* RevenueCatSubscriptionService.swift */; };
+		5CB80D5E441A88542C581A3D /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 4135484595D48610F772E00B /* Sentry */; };
 		5DF2504459BEC6FF78844515 /* SupabaseSyncIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5846337EC5D2C29829508CE /* SupabaseSyncIntegrationTests.swift */; };
 		6DD30FE07E69E5BAADCC6A78 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22E6A209647AA15C31E393C9 /* PaywallView.swift */; };
 		7259469165468E46E99960EC /* AppServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E67EA1579CD8C2010498589 /* AppServices.swift */; };
@@ -21,8 +23,12 @@
 		86A3D55A9A373387410EDDBD /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A13075C69399BF8BC29B5DC0 /* ProfileView.swift */; };
 		8A5B4BFE66CF536EAEB1C8B6 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D56755165012236D9565B0E6 /* HomeView.swift */; };
 		94D7187C804E71AEB50AE7C0 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3037E0A32F5DE0D7934C86AB /* SharedComponents.swift */; };
+		9B9B3E6A591D43A78ADC09DB /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 427DADCC7CE7890CDF2ED3EC /* PostHog */; };
+		A00B0D726795CFD752FE3B4B /* SentryCrashReporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D357C99050A411C133B42C96 /* SentryCrashReporter.swift */; };
+		A7F06FBB02F42B319F2CBA79 /* PostHogAnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8B14EDBA2A423A53D5FA006 /* PostHogAnalyticsService.swift */; };
 		B16A59F5B0D29EEF63D5DCC7 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 801FDC15A6B61775B7510DC9 /* AppTheme.swift */; };
 		B28F90DC454D01C70D7F1727 /* RemoteSyncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512453199979D8147E7C68C6 /* RemoteSyncing.swift */; };
+		C1FD9C2DADD642C88F3AC941 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = C82AB30CC0D3D9FA6EAF95C3 /* RevenueCat */; };
 		C38A3E4AA8AED0F1DC886A34 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5424F80C33C9AD5056CE0C /* HomeViewModel.swift */; };
 		C97CBA50B6995BE8232C2CAB /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 9ACEA5F6B599053E7D0A6F07 /* Supabase */; };
 		D6E2C9611BCF117AF558E1EE /* RecommendationEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7753CA992802A4F3D63B7BA /* RecommendationEngineTests.swift */; };
@@ -66,11 +72,14 @@
 		82D4211CD81FD7FE559A57EA /* WhatToEatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatToEatApp.swift; sourceTree = "<group>"; };
 		8E67EA1579CD8C2010498589 /* AppServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppServices.swift; sourceTree = "<group>"; };
 		967E007B7C42BEF932262A45 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		9AFBF287909C05BA38C661EA /* RevenueCatSubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RevenueCatSubscriptionService.swift; sourceTree = "<group>"; };
 		A105175506BB580F9EF76B1B /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		A13075C69399BF8BC29B5DC0 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		B5846337EC5D2C29829508CE /* SupabaseSyncIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseSyncIntegrationTests.swift; sourceTree = "<group>"; };
 		C87EC9723B10B542EF2400FC /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
+		C8B14EDBA2A423A53D5FA006 /* PostHogAnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostHogAnalyticsService.swift; sourceTree = "<group>"; };
 		C934B0975A60372617E1144B /* ResultsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsView.swift; sourceTree = "<group>"; };
+		D357C99050A411C133B42C96 /* SentryCrashReporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentryCrashReporter.swift; sourceTree = "<group>"; };
 		D385B3E22AA9607C9A1D1219 /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		D56755165012236D9565B0E6 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		D7753CA992802A4F3D63B7BA /* RecommendationEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationEngineTests.swift; sourceTree = "<group>"; };
@@ -84,6 +93,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				C97CBA50B6995BE8232C2CAB /* Supabase in Frameworks */,
+				C1FD9C2DADD642C88F3AC941 /* RevenueCat in Frameworks */,
+				9B9B3E6A591D43A78ADC09DB /* PostHog in Frameworks */,
+				5CB80D5E441A88542C581A3D /* Sentry in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,8 +162,11 @@
 				2A203466B269F78CF27EE3CF /* AppStore.swift */,
 				801FDC15A6B61775B7510DC9 /* AppTheme.swift */,
 				5DC8CD0A6CCC25E1CB65CB1C /* LocalPersistenceStore.swift */,
+				C8B14EDBA2A423A53D5FA006 /* PostHogAnalyticsService.swift */,
 				4970AB4D039CAE2073CA91A5 /* RecommendationEngine.swift */,
 				512453199979D8147E7C68C6 /* RemoteSyncing.swift */,
+				9AFBF287909C05BA38C661EA /* RevenueCatSubscriptionService.swift */,
+				D357C99050A411C133B42C96 /* SentryCrashReporter.swift */,
 				D385B3E22AA9607C9A1D1219 /* SupabaseConfig.swift */,
 				509CADAC1CAE0E0A3B1504A9 /* SupabaseSyncService.swift */,
 			);
@@ -223,6 +238,9 @@
 			name = WhatToEat;
 			packageProductDependencies = (
 				9ACEA5F6B599053E7D0A6F07 /* Supabase */,
+				C82AB30CC0D3D9FA6EAF95C3 /* RevenueCat */,
+				427DADCC7CE7890CDF2ED3EC /* PostHog */,
+				4135484595D48610F772E00B /* Sentry */,
 			);
 			productName = WhatToEat;
 			productReference = 375353668969A14E3770AC70 /* WhatToEat.app */;
@@ -273,6 +291,9 @@
 			mainGroup = 1B2ACD646B8B8F8704FB636D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				01858EE90B58B184C83E07A0 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+				94EBEBEB3F3377940A35BEDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
+				390C43224EAE77DE8CFE1780 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				C7B24BD46A25FA1933B78301 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -312,13 +333,16 @@
 				31879F893C2A0C7F82E99E64 /* OnboardingView.swift in Sources */,
 				809DED2A53288E97D29625C4 /* OnboardingViewModel.swift in Sources */,
 				6DD30FE07E69E5BAADCC6A78 /* PaywallView.swift in Sources */,
+				A7F06FBB02F42B319F2CBA79 /* PostHogAnalyticsService.swift in Sources */,
 				86A3D55A9A373387410EDDBD /* ProfileView.swift in Sources */,
 				0882BC3BEAD4E8C0EE4AC92C /* ProfileViewModel.swift in Sources */,
 				E77E864A1F2B8DAC42D8EBDB /* RecommendationDetailView.swift in Sources */,
 				F9E6451A184D8592735ED739 /* RecommendationEngine.swift in Sources */,
 				B28F90DC454D01C70D7F1727 /* RemoteSyncing.swift in Sources */,
 				E087528F79B48EF5B99E40E4 /* ResultsView.swift in Sources */,
+				5894C9AB32D3365DBB5BACCC /* RevenueCatSubscriptionService.swift in Sources */,
 				DFDCE5E56E9BDE50C723A8DB /* RootView.swift in Sources */,
+				A00B0D726795CFD752FE3B4B /* SentryCrashReporter.swift in Sources */,
 				94D7187C804E71AEB50AE7C0 /* SharedComponents.swift in Sources */,
 				F541215D52272214D37439C0 /* SupabaseConfig.swift in Sources */,
 				3E4D4F62A6F49C2195D082FA /* SupabaseSyncService.swift in Sources */,
@@ -569,6 +593,30 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		01858EE90B58B184C83E07A0 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.24.0;
+			};
+		};
+		390C43224EAE77DE8CFE1780 /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.49.0;
+			};
+		};
+		94EBEBEB3F3377940A35BEDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios-spm.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.21.0;
+			};
+		};
 		C7B24BD46A25FA1933B78301 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift.git";
@@ -580,10 +628,25 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		4135484595D48610F772E00B /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 390C43224EAE77DE8CFE1780 /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
+		427DADCC7CE7890CDF2ED3EC /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 01858EE90B58B184C83E07A0 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
 		9ACEA5F6B599053E7D0A6F07 /* Supabase */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C7B24BD46A25FA1933B78301 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		C82AB30CC0D3D9FA6EAF95C3 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 94EBEBEB3F3377940A35BEDA /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

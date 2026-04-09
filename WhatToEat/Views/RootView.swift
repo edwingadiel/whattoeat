@@ -23,6 +23,15 @@ struct RootView: View {
 private struct MainTabView: View {
     @ObservedObject var store: AppStore
 
+    init(store: AppStore) {
+        self.store = store
+        let appearance = UITabBarAppearance()
+        appearance.configureWithDefaultBackground()
+        appearance.backgroundColor = UIColor(AppTheme.background.opacity(0.95))
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         TabView {
             HomeView(store: store)
@@ -32,15 +41,14 @@ private struct MainTabView: View {
 
             FavoritesView(store: store)
                 .tabItem {
-                    Label("Saved", systemImage: "bookmark")
+                    Label("Saved", systemImage: "bookmark.fill")
                 }
 
             ProfileView(store: store)
                 .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle")
+                    Label("Profile", systemImage: "person.crop.circle.fill")
                 }
         }
         .tint(AppTheme.accent)
-        .background(AppTheme.background.ignoresSafeArea())
     }
 }

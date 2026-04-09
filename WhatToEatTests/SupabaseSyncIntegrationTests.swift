@@ -38,15 +38,35 @@ final class SupabaseSyncIntegrationTests: XCTestCase {
             topResultName: "Chicken Burrito Bowl",
             createdAt: Date()
         )
+        try await service.saveHistoryEntry(userID: userID, entry: historyEntry)
+
+        let served = [
+            ServedRecommendation(
+                id: UUID(),
+                queryID: historyEntry.id,
+                restaurantItemID: "chipotle_chicken_bowl",
+                finalScore: 0.87,
+                explanationShort: "Close to target with strong protein.",
+                rankPosition: 1
+            ),
+            ServedRecommendation(
+                id: UUID(),
+                queryID: historyEntry.id,
+                restaurantItemID: "cfa_grilled_nuggets_12",
+                finalScore: 0.72,
+                explanationShort: "Good post-workout option.",
+                rankPosition: 2
+            )
+        ]
+        try await service.saveServedRecommendations(served)
+
         let feedbackEntry = UserFeedback(
             id: UUID(),
             itemID: "chipotle_chicken_bowl",
+            recommendationID: served.first?.id,
             reason: .goodPick,
             createdAt: Date()
         )
-
-        try await service.saveHistoryEntry(userID: userID, entry: historyEntry)
-        try await service.saveFeedbackEntry(userID: userID, entry: feedbackEntry)
 
         let remoteProfile = try await service.fetchProfileForDebug(userID: userID)
         let remoteFavorites = try await service.fetchFavoritesForDebug(userID: userID)

@@ -79,6 +79,15 @@ actor SupabaseSyncService: RemoteUserSyncing {
             .execute()
     }
 
+    func saveServedRecommendations(_ recommendations: [ServedRecommendation]) async throws {
+        guard !recommendations.isEmpty else { return }
+        let rows = recommendations.map(ServedRecommendationRow.init)
+        try await client
+            .from("recommendations_served")
+            .insert(rows)
+            .execute()
+    }
+
     func currentUserID() async throws -> String {
         try await ensureAnonymousUserID()
     }
@@ -284,7 +293,7 @@ private struct FeedbackRow: Codable {
     init(userID: String, entry: UserFeedback) {
         id = entry.id
         self.userID = userID
-        recommendationID = nil
+        recommendationID = entry.recommendationID
         restaurantItemID = entry.itemID
         sentiment = entry.reason == .goodPick ? "positive" : "negative"
         reason = entry.reason.rawValue
@@ -299,6 +308,7 @@ private struct FeedbackRow: Codable {
         return UserFeedback(
             id: id,
             itemID: restaurantItemID,
+            recommendationID: recommendationID,
             reason: parsedReason,
             createdAt: createdAt
         )
@@ -312,5 +322,32 @@ private struct FeedbackRow: Codable {
         case sentiment
         case reason
         case createdAt = "created_at"
+    }
+}
+
+private struct ServedRecommendationRow: Codable {
+    let id: UUID
+    let queryID: UUID
+    let restaurantItemID: String
+    let finalScore: Double
+    let explanationShort: String
+    let rankPosition: Int
+
+    init(_ recommendation: ServedRecommendation) {
+        id = recommendation.id
+        queryID = recommendation.queryID
+        restaurantItemID = recommendation.restaurantItemID
+        finalScore = recommendation.finalScore
+        explanationShort = recommendation.explanationShort
+        rankPosition = recommendation.rankPosition
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case queryID = "query_id"
+        case restaurantItemID = "restaurant_item_id"
+        case finalScore = "final_score"
+        case explanationShort = "explanation_short"
+        case rankPosition = "rank_position"
     }
 }

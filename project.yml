@@ -13,6 +13,15 @@ packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift.git
     from: 2.43.1
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios-spm.git
+    from: 5.21.0
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios.git
+    from: 3.24.0
+  Sentry:
+    url: https://github.com/getsentry/sentry-cocoa.git
+    from: 8.49.0
 targets:
   WhatToEat:
     type: application
@@ -38,9 +47,19 @@ targets:
         LSRequiresIPhoneOS: true
         SUPABASE_URL: $(SUPABASE_URL)
         SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        REVENUECAT_API_KEY: $(REVENUECAT_API_KEY)
+        POSTHOG_API_KEY: $(POSTHOG_API_KEY)
+        POSTHOG_HOST: $(POSTHOG_HOST)
+        SENTRY_DSN: $(SENTRY_DSN)
     dependencies:
       - package: Supabase
         product: Supabase
+      - package: RevenueCat
+        product: RevenueCat
+      - package: PostHog
+        product: PostHog
+      - package: Sentry
+        product: Sentry
     settings:
       base:
         TARGETED_DEVICE_FAMILY: 1

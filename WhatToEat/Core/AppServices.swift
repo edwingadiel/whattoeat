@@ -12,10 +12,11 @@ protocol AuthProviding {
     func anonymousUserID() -> String
 }
 
-protocol SubscriptionProviding {
+protocol SubscriptionProviding: Sendable {
     func currentEntitlement() -> UserEntitlement
-    func purchasePlus() -> UserEntitlement
-    func restorePurchases() -> UserEntitlement
+    func fetchOfferings() async -> [ProductOffering]
+    func purchase(_ product: PurchaseProduct) async throws -> UserEntitlement
+    func restorePurchases() async throws -> UserEntitlement
 }
 
 protocol CatalogProviding {
@@ -56,7 +57,7 @@ final class LocalAuthService: AuthProviding {
     }
 }
 
-struct LocalSubscriptionService: SubscriptionProviding {
+final class LocalSubscriptionService: SubscriptionProviding, @unchecked Sendable {
     private let key = "whattoeat.entitlement"
 
     func currentEntitlement() -> UserEntitlement {
@@ -67,12 +68,22 @@ struct LocalSubscriptionService: SubscriptionProviding {
         return .free
     }
 
-    func purchasePlus() -> UserEntitlement {
-        save(.plus)
-        return .plus
+    func fetchOfferings() async -> [ProductOffering] {
+        [.defaultMonthly, .defaultAnnual]
     }
 
-    func restorePurchases() -> UserEntitlement {
+    func purchase(_ product: PurchaseProduct) async throws -> UserEntitlement {
+        let entitlement = UserEntitlement(
+            isPlus: true,
+            planName: "Plus",
+            providerCustomerID: "local-plus-user",
+            periodType: product == .plusAnnual ? "annual" : "monthly"
+        )
+        save(entitlement)
+        return entitlement
+    }
+
+    func restorePurchases() async throws -> UserEntitlement {
         currentEntitlement()
     }
 
@@ -95,13 +106,43 @@ struct BundleCatalogService: CatalogProviding {
 
 enum AppEnvironmentFactory {
     static func live() -> AppEnvironment {
-        AppEnvironment(
-            analytics: ConsoleAnalyticsService(),
-            crashReporter: ConsoleCrashReporter(),
+        let subscriptions: SubscriptionProviding = {
+            if let apiKey = configValue("REVENUECAT_API_KEY") {
+                return RevenueCatSubscriptionService(apiKey: apiKey)
+            }
+            return LocalSubscriptionService()
+        }()
+
+        let analytics: AnalyticsTracking = {
+            if let apiKey = configValue("POSTHOG_API_KEY") {
+                let host = Bundle.main.object(forInfoDictionaryKey: "POSTHOG_HOST") as? String
+                return PostHogAnalyticsService(apiKey: apiKey, host: host)
+            }
+            return ConsoleAnalyticsService()
+        }()
+
+        let crashReporter: CrashReporting = {
+            if let dsn = configValue("SENTRY_DSN") {
+                return SentryCrashReporter(dsn: dsn)
+            }
+            return ConsoleCrashReporter()
+        }()
+
+        return AppEnvironment(
+            analytics: analytics,
+            crashReporter: crashReporter,
             auth: LocalAuthService(),
-            subscriptions: LocalSubscriptionService(),
+            subscriptions: subscriptions,
             catalog: BundleCatalogService(),
             remoteSync: SupabaseSyncService(configuration: SupabaseConfiguration.load())
         )
+    }
+
+    private static func configValue(_ key: String) -> String? {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String else {
+            return nil
+        }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

@@ -12,10 +12,20 @@ final class HomeViewModel: ObservableObject {
 
     private let store: AppStore
 
-    init(store: AppStore) {
+    init(store: AppStore, prefillQuery: RecommendationQuery? = nil) {
         self.store = store
-        targetCalories = "\(store.profile.calorieTargetDefault)"
-        targetProtein = "\(store.profile.proteinTargetDefault)"
+
+        if let query = prefillQuery {
+            targetCalories = "\(query.targetCalories)"
+            targetProtein = "\(query.targetProtein)"
+            targetCarbs = query.targetCarbs.map { "\($0)" } ?? ""
+            targetFat = query.targetFat.map { "\($0)" } ?? ""
+            selectedContext = query.context
+            selectedRestaurantIDs = Set(query.restaurantIDs)
+        } else {
+            targetCalories = "\(store.profile.calorieTargetDefault)"
+            targetProtein = "\(store.profile.proteinTargetDefault)"
+        }
     }
 
     var canUseAdvancedMacros: Bool {

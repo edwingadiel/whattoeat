@@ -94,9 +94,46 @@ struct UserEntitlement: Codable, Equatable, Sendable {
     var isPlus: Bool
     var planName: String
     var providerCustomerID: String?
+    var expiresAt: Date?
+    var periodType: String?
 
     static let free = UserEntitlement(isPlus: false, planName: "Free", providerCustomerID: nil)
     static let plus = UserEntitlement(isPlus: true, planName: "Plus", providerCustomerID: "local-plus-user")
+
+    var isMonthly: Bool { periodType == "monthly" }
+    var isAnnual: Bool { periodType == "annual" }
+}
+
+enum PurchaseProduct: String, CaseIterable, Identifiable, Sendable {
+    case plusMonthly = "whattoeat_plus_monthly"
+    case plusAnnual = "whattoeat_plus_annual"
+
+    var id: String { rawValue }
+}
+
+struct ProductOffering: Equatable, Sendable {
+    let product: PurchaseProduct
+    let localizedPrice: String
+    let localizedPeriod: String
+
+    static let defaultMonthly = ProductOffering(product: .plusMonthly, localizedPrice: "$3.99", localizedPeriod: "month")
+    static let defaultAnnual = ProductOffering(product: .plusAnnual, localizedPrice: "$29.99", localizedPeriod: "year")
+}
+
+enum PurchaseError: Error, LocalizedError, Sendable {
+    case cancelled
+    case networkError
+    case notConfigured
+    case unknown(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .cancelled: "Purchase was cancelled."
+        case .networkError: "Could not connect. Check your internet and try again."
+        case .notConfigured: "Subscriptions are not configured yet."
+        case .unknown(let detail): detail
+        }
+    }
 }
 
 struct Restaurant: Codable, Identifiable, Hashable, Sendable {
@@ -203,6 +240,7 @@ struct RecommendationResult: Identifiable, Equatable, Hashable, Sendable {
     let score: Double
     let isNearMatch: Bool
     let premiumFieldsLocked: Bool
+    var servedID: UUID?
 }
 
 struct RecommendationResponse: Identifiable, Equatable, Hashable, Sendable {
@@ -221,9 +259,19 @@ struct SearchHistoryEntry: Codable, Identifiable, Hashable, Sendable {
     let createdAt: Date
 }
 
+struct ServedRecommendation: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    let queryID: UUID
+    let restaurantItemID: String
+    let finalScore: Double
+    let explanationShort: String
+    let rankPosition: Int
+}
+
 struct UserFeedback: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     let itemID: String
+    let recommendationID: UUID?
     let reason: FeedbackReason
     let createdAt: Date
 }

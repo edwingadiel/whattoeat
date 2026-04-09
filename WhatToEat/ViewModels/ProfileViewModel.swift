@@ -16,11 +16,15 @@ final class ProfileViewModel: ObservableObject {
         store.entitlement.isPlus
     }
 
+    var isPurchasing: Bool {
+        store.isPurchasing
+    }
+
     func purchase() {
-        store.purchasePlus()
+        Task { await store.purchase(.plusMonthly) }
     }
 
     func restore() {
-        store.restorePurchases()
+        Task { await store.restorePurchases() }
     }
 }

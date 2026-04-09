@@ -1,191 +1,144 @@
 # WhatToEat TODO
 
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 
-## Priority 0
+## Completed
 
-### Connect `recommendations_served`
+### Connect `recommendations_served` (P0 — DONE)
 
-Why:
+- Served recommendations persisted for each search
+- Feedback links to `recommendation_id` when available
+- Supabase sync wired for `recommendations_served` table
 
-- feedback should attach to a concrete recommendation record
-- this unlocks better ranking and analytics later
+### RevenueCat integration (P1 — DONE)
 
-Tasks:
+- RevenueCat SDK added and wired
+- `RevenueCatSubscriptionService` implements `SubscriptionProviding`
+- Paywall with monthly ($3.99) and annual ($29.99) pricing cards
+- Restore purchases flow working
+- Auto-selects real service when `REVENUECAT_API_KEY` is set, falls back to local mock
 
-- persist recommendation results for each search
-- write `query_id`, `restaurant_item_id`, `final_score`, `explanation_short`, `rank_position`
-- update feedback flow to pass `recommendation_id` when available
-- keep `restaurant_item_id` as a fallback for simple UI feedback
+### Analytics integration (P1 — DONE)
 
-Files likely involved:
+- PostHog SDK added and wired via `PostHogAnalyticsService`
+- Tracks: onboarding_completed, query_submitted, recommendations_viewed, recommendation_opened, favorite_added, feedback_submitted, paywall_viewed, subscription_started, subscription_restored
+- User identification on bootstrap
+- Auto-selects when `POSTHOG_API_KEY` is set, falls back to console
 
-- [AppStore.swift](/Users/sarasarai/Documents/whattoeat/WhatToEat/Core/AppStore.swift)
-- [SupabaseSyncService.swift](/Users/sarasarai/Documents/whattoeat/WhatToEat/Core/SupabaseSyncService.swift)
-- [RecommendationDetailView.swift](/Users/sarasarai/Documents/whattoeat/WhatToEat/Views/RecommendationDetailView.swift)
-- [20260408185500_init.sql](/Users/sarasarai/Documents/whattoeat/supabase/migrations/20260408185500_init.sql)
+### Sentry integration (P1 — DONE)
 
-## Priority 1
+- Sentry SDK added and wired via `SentryCrashReporter`
+- Captures errors with breadcrumbs and user context
+- Auto-selects when `SENTRY_DSN` is set, falls back to console
 
-### Decide catalog source of truth
+### Improve profile/history UX (P2 — DONE)
+
+- Relative timestamps (just now, Xm ago, Xh ago, yesterday, Xd ago)
+- Tap history entry to re-run that query (navigates to HomeView with prefilled values)
+- Color-coded query stats (calories in accent, protein in teal)
+- History count indicator for free users (showing X of Y)
+- Unlock full history upsell for free users
+
+### Improve network failure handling (P2 — DONE)
+
+- Sync status banner in ProfileView (synced vs local-only with cloud icon)
+- Integration dashboard (2x2 grid showing Supabase, PostHog, Sentry, RevenueCat status)
+- Clear visual indicators for connected vs not-configured services
+
+### Add search count indicator (P2 — DONE)
+
+- Free users see "X searches left today" under the search CTA
+- Usage gauge in ProfileView showing searches used/5 and favorites saved/5
+- Warning state when limit is reached
+- Progress bar visualization
+
+### Improve empty states (P2 — DONE)
+
+- ResultsView: icon + helpful suggestions when no matches found
+- FavoritesView: centered icon with contextual guidance
+- ProfileView history: search icon with "no searches yet" message
+
+### Polish animations (P2 — DONE)
+
+- Staggered card entrance animations on ResultsView (spring with delay per card)
+- Fade + slide transitions for recommendation cards
+
+## Remaining
+
+### Decide catalog source of truth (P1)
 
 Open question:
 
-- should the restaurant catalog stay local JSON for MVP simplicity
-- or move to Supabase for centralized updates
+- Should the restaurant catalog stay local JSON for MVP simplicity?
+- Or move to Supabase for centralized updates?
 
 Recommended short-term path:
 
-- keep local JSON for app recommendations
-- build a script or pipeline to generate Supabase seed from the same source
+- Keep local JSON for app recommendations
+- Build a script or pipeline to generate Supabase seed from the same source
 
 Tasks:
 
-- document one source of truth
-- remove duplicated divergence risk between JSON and SQL seed
-- decide whether app reads catalog locally, remotely, or hybrid
+- Document one source of truth
+- Remove duplicated divergence risk between JSON and SQL seed
+- Decide whether app reads catalog locally, remotely, or hybrid
 
-### RevenueCat integration
-
-Why:
-
-- current `Plus` state is mocked
-- need real entitlements before TestFlight validation of pricing
-
-Tasks:
-
-- add RevenueCat SDK
-- replace `LocalSubscriptionService`
-- map entitlement to `UserEntitlement`
-- support restore purchases
-- confirm paywall gating still works cleanly
-
-### Analytics integration
-
-Why:
-
-- need visibility into activation and conversion
-
-Track at minimum:
-
-- onboarding completed
-- query submitted
-- recommendations viewed
-- recommendation opened
-- favorite added
-- feedback submitted
-- paywall viewed
-- subscription started
-- subscription restored
-
-Recommended providers:
-
-- PostHog or Firebase Analytics
-
-### Sentry integration
-
-Why:
-
-- app already has multiple async/network boundaries
-- real crash/error visibility will matter once external testers use it
-
-## Priority 2
-
-### Improve profile/history UX
-
-Current state:
-
-- history is visible in the profile screen
-- useful, but basic
-
-Tasks:
-
-- show timestamp formatting
-- allow tapping a history item to re-run the query
-- show backend sync state more clearly
-- expose recent feedback history if useful
-
-### Improve network failure handling
-
-Tasks:
-
-- add lightweight user-facing status when backend is unavailable
-- avoid silent fallback where it could confuse users
-- surface whether sync is local-only or remote-enabled
-
-### Add query count sync strategy
+### Add query count sync strategy (P2)
 
 Current issue:
 
-- free-tier daily query limit is still tracked locally in `UserDefaults`
+- Free-tier daily query limit is tracked locally in `UserDefaults`
 
 Tasks:
 
-- decide whether this should remain local for MVP
-- or move to backend-backed counting for more reliable enforcement
+- Decide whether this should remain local for MVP
+- Or move to backend-backed counting for more reliable enforcement
 
-## Priority 3
-
-### Move recommendation execution server-side
+### Move recommendation execution server-side (P3)
 
 Current state:
 
-- recommendation engine runs in Swift locally
+- Recommendation engine runs in Swift locally
 - Supabase function exists as scaffold only
 
-Why this matters later:
+Tasks:
 
-- shared business logic across clients
-- more consistent analytics and recommendation auditing
-- easier experimentation
+- Port scoring logic cleanly to backend
+- Compare backend results vs current local engine
+- Decide whether app should fully switch or stay hybrid
+
+### Add production Supabase environment (P3)
 
 Tasks:
 
-- port scoring logic cleanly to backend
-- compare backend results vs current local engine
-- decide whether app should fully switch or stay hybrid
+- Create cloud project when ready
+- Wire Release config
+- Move secrets and keys to proper environment management
+- Verify auth and RLS behavior in hosted environment
 
-### Add production Supabase environment
-
-Tasks:
-
-- create cloud project when ready
-- wire Release config
-- move secrets and keys to proper environment management
-- verify auth and RLS behavior in hosted environment
-
-### TestFlight internal release
-
-Why:
-
-- need product validation, not just technical validation
+### TestFlight internal release (P3)
 
 Questions to validate:
 
-- do users understand the home screen quickly
-- do top 3 recommendations feel useful
-- does anyone save favorites naturally
-- would users pay at the current price
+- Do users understand the home screen quickly?
+- Do top 3 recommendations feel useful?
+- Does anyone save favorites naturally?
+- Would users pay at the current price?
 
 ## Product validation tasks
 
 ### Validate recommendation usefulness
 
-Tasks:
-
-- test realistic calorie/protein targets
-- test edge cases with few or no matches
-- verify explanations feel trustworthy
-- verify suggestions feel like real meals, not “technically correct” but weird picks
+- Test realistic calorie/protein targets
+- Test edge cases with few or no matches
+- Verify explanations feel trustworthy
+- Verify suggestions feel like real meals
 
 ### Validate data quality
 
-Tasks:
-
-- re-check nutrition values against official sources
-- validate modification deltas
-- remove stale or suspicious items
-- document data review cadence
+- Re-check nutrition values against official sources
+- Validate modification deltas
+- Remove stale or suspicious items
 
 ## Code quality tasks
 
@@ -193,11 +146,11 @@ Tasks:
 
 Useful future tests:
 
-- bootstrapping remote history into a fresh local store
-- seeding local history into empty remote state
-- query persistence order
-- feedback merge behavior
-- favorites replacement after toggle/remove cycles
+- Bootstrapping remote history into a fresh local store
+- Seeding local history into empty remote state
+- Query persistence order
+- Feedback merge behavior
+- Favorites replacement after toggle/remove cycles
 
 ### Refactor sync boundaries if needed
 
@@ -207,32 +160,27 @@ Current state:
 
 Potential improvement:
 
-- extract a dedicated sync coordinator if remote logic grows further
+- Extract a dedicated sync coordinator if remote logic grows further
 
 ## Nice-to-have later
 
-### Pantry mode
+### Pantry mode (Phase 2)
 
-Deferred by design.
-
-Only revisit after:
-
-- restaurant flow proves useful
-- retention justifies more scope
+Only revisit after restaurant flow proves useful and retention justifies more scope.
 
 ### More chains
 
-Only add more restaurants after:
+Only add more restaurants after existing chain data is stable and recommendation usefulness is validated.
 
-- existing chain data is stable
-- recommendation usefulness is validated
-- retention shows the app is worth expanding
+## Setup keys still needed
 
-## Suggested execution order
+All three SDKs are wired and auto-select based on key presence. Fill these in when ready:
 
-1. `recommendations_served`
-2. RevenueCat
-3. analytics + Sentry
-4. catalog source-of-truth cleanup
-5. TestFlight internal release
-6. recommendation backend migration if needed
+| Key | Debug.xcconfig | Release.xcconfig |
+|-----|---------------|-----------------|
+| `SUPABASE_URL` | Set (localhost) | BLANK |
+| `SUPABASE_ANON_KEY` | Set (local) | BLANK |
+| `REVENUECAT_API_KEY` | BLANK | BLANK |
+| `POSTHOG_API_KEY` | BLANK | BLANK |
+| `POSTHOG_HOST` | BLANK (optional) | BLANK |
+| `SENTRY_DSN` | BLANK | BLANK |

@@ -10,33 +10,45 @@ struct PillButton: View {
             Text(title)
                 .font(.system(.subheadline, design: .rounded, weight: .semibold))
                 .foregroundStyle(isSelected ? Color.white : AppTheme.ink)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isSelected ? AppTheme.ink : Color.white.opacity(0.75))
+                        .fill(isSelected ? AppTheme.ink : Color.white.opacity(0.85))
+                        .shadow(color: isSelected ? AppTheme.ink.opacity(0.3) : .clear, radius: 6, y: 2)
+                )
+                .overlay(
+                    Capsule(style: .continuous)
+                        .stroke(isSelected ? .clear : AppTheme.border, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
+        .animation(.easeOut(duration: 0.2), value: isSelected)
     }
 }
 
 struct MetricChip: View {
     let title: String
     let value: String
+    var color: Color = AppTheme.teal
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.system(.caption, design: .rounded))
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .bold, design: .rounded))
                 .foregroundStyle(AppTheme.mutedInk)
+                .tracking(0.5)
             Text(value)
-                .font(.system(.headline, design: .rounded, weight: .bold))
-                .foregroundStyle(AppTheme.ink)
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(color)
         }
-        .padding(12)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardStyle(fill: Color.white.opacity(0.72))
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(color.opacity(0.08))
+        )
     }
 }
 
@@ -44,52 +56,172 @@ struct RecommendationCard: View {
     let result: RecommendationResult
     let isFavorite: Bool
     let onFavorite: () -> Void
+    var rankLabel: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top) {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(result.restaurant.name.uppercased())
-                        .font(.system(.caption, design: .rounded, weight: .bold))
-                        .foregroundStyle(AppTheme.teal)
+                    HStack(spacing: 8) {
+                        Text(result.restaurant.name.uppercased())
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppTheme.teal)
+                            .tracking(0.8)
+
+                        if let rank = rankLabel {
+                            Text(rank)
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(AppTheme.accent)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule().fill(AppTheme.accentSoft)
+                                )
+                        }
+
+                        if result.isNearMatch {
+                            Text("CLOSE FIT")
+                                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                                .foregroundStyle(AppTheme.warning)
+                                .padding(.horizontal, 7)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule().fill(AppTheme.warning.opacity(0.12))
+                                )
+                        }
+                    }
+
                     Text(result.item.name)
                         .font(.system(.title3, design: .rounded, weight: .bold))
                         .foregroundStyle(AppTheme.ink)
+
                     Text(result.explanation)
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(AppTheme.mutedInk)
+                        .lineLimit(2)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 Button(action: onFavorite) {
                     Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
                         .font(.title3)
-                        .foregroundStyle(isFavorite ? AppTheme.accent : AppTheme.ink)
+                        .foregroundStyle(isFavorite ? AppTheme.accent : AppTheme.mutedInk)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(isFavorite ? AppTheme.accentSoft : Color.clear)
+                        )
                 }
                 .buttonStyle(.plain)
+                .animation(.spring(response: 0.35), value: isFavorite)
             }
 
-            HStack(spacing: 10) {
-                MetricChip(title: "Calories", value: "\(result.item.calories)")
-                MetricChip(title: "Protein", value: "\(result.item.protein)g")
+            HStack(spacing: 8) {
+                MetricChip(title: "Cal", value: "\(result.item.calories)", color: AppTheme.accent)
+                MetricChip(title: "Protein", value: "\(result.item.protein)g", color: AppTheme.teal)
                 if result.premiumFieldsLocked {
-                    MetricChip(title: "More", value: "Plus")
+                    MetricChip(title: "Macros", value: "Plus", color: AppTheme.gold)
                 } else {
-                    MetricChip(title: "Carbs/Fat", value: "\(result.item.carbs)g / \(result.item.fat)g")
+                    MetricChip(title: "C / F", value: "\(result.item.carbs)g / \(result.item.fat)g", color: AppTheme.ink)
                 }
-            }
-
-            if result.isNearMatch {
-                Text("Closest fit")
-                    .font(.system(.caption, design: .rounded, weight: .bold))
-                    .foregroundStyle(AppTheme.warning)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Capsule().fill(Color.white.opacity(0.7)))
             }
         }
         .padding(18)
         .cardStyle()
+    }
+}
+
+struct SectionHeader: View {
+    let title: String
+    var subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 28, weight: .black, design: .rounded))
+                .foregroundStyle(AppTheme.ink)
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(AppTheme.mutedInk)
+            }
+        }
+    }
+}
+
+struct GradientButton: View {
+    let title: String
+    var gradient: LinearGradient = AppTheme.accentGradient
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.buttonRadius, style: .continuous)
+                        .fill(gradient)
+                        .shadow(color: AppTheme.accent.opacity(0.35), radius: 12, y: 6)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct SecondaryButton: View {
+    let title: String
+    var color: Color = AppTheme.ink
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(color)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: AppTheme.buttonRadius, style: .continuous)
+                        .fill(color.opacity(0.08))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.buttonRadius, style: .continuous)
+                        .stroke(color.opacity(0.15), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct LabeledTextField: View {
+    let label: String
+    let placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType = .default
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label.uppercased())
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.mutedInk)
+                .tracking(0.5)
+            TextField(placeholder, text: $text)
+                .font(.system(.body, design: .rounded))
+                .keyboardType(keyboardType)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.white.opacity(0.9))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(AppTheme.border, lineWidth: 1)
+                )
+        }
     }
 }

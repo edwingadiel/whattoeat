@@ -14,4 +14,5 @@ protocol RemoteUserSyncing: Actor {
     func replaceFavorites(userID: String, itemIDs: [String]) async throws
     func saveHistoryEntry(userID: String, entry: SearchHistoryEntry) async throws
     func saveFeedbackEntry(userID: String, entry: UserFeedback) async throws
+    func saveServedRecommendations(_ recommendations: [ServedRecommendation]) async throws
 }

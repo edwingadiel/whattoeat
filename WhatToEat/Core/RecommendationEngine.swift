@@ -127,7 +127,8 @@ struct RecommendationEngine {
                 ),
                 score: totalScore,
                 isNearMatch: isExpanded && !(withinExactTolerance(item: item, query: query)),
-                premiumFieldsLocked: !isPlus
+                premiumFieldsLocked: !isPlus,
+                servedID: nil
             )
         }
         .sorted { lhs, rhs in
