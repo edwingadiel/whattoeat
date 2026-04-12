@@ -27,6 +27,7 @@ struct ResultsView: View {
             Text(response.topRecommendations.isEmpty ? "No strong matches" : "Your top picks")
                 .font(.system(size: 30, weight: .black, design: .rounded))
                 .foregroundStyle(AppTheme.ink)
+                .accessibilityAddTraits(.isHeader)
 
             HStack(spacing: 8) {
                 queryStat(icon: "flame.fill", text: "\(response.query.targetCalories) cal", color: AppTheme.accent)
@@ -57,6 +58,8 @@ struct ResultsView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(AppTheme.warning.opacity(0.08))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Tip: \(text)")
     }
 
     // MARK: - Results

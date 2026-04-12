@@ -14,7 +14,7 @@ struct PillButton: View {
                 .padding(.vertical, 10)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isSelected ? AppTheme.ink : Color.white.opacity(0.85))
+                        .fill(isSelected ? AppTheme.ink : AppTheme.surfaceElevated)
                         .shadow(color: isSelected ? AppTheme.ink.opacity(0.3) : .clear, radius: 6, y: 2)
                 )
                 .overlay(
@@ -24,6 +24,9 @@ struct PillButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeOut(duration: 0.2), value: isSelected)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(isSelected ? "Double tap to deselect" : "Double tap to select")
     }
 }
 
@@ -49,6 +52,8 @@ struct MetricChip: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(color.opacity(0.08))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(value)")
     }
 }
 
@@ -115,6 +120,8 @@ struct RecommendationCard: View {
                 }
                 .buttonStyle(.plain)
                 .animation(.spring(response: 0.35), value: isFavorite)
+                .accessibilityLabel(isFavorite ? "Remove from saved" : "Save this pick")
+                .accessibilityHint("Double tap to \(isFavorite ? "remove from" : "add to") saved meals")
             }
 
             HStack(spacing: 8) {
@@ -129,6 +136,8 @@ struct RecommendationCard: View {
         }
         .padding(18)
         .cardStyle()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(rankLabel.map { "Rank \($0), " } ?? "")\(result.item.name) from \(result.restaurant.name). \(result.item.calories) calories, \(result.item.protein) grams protein")
     }
 }
 
@@ -150,7 +159,7 @@ struct ContextPillButton: View {
             .padding(.vertical, 8)
             .background(
                 Capsule(style: .continuous)
-                    .fill(isSelected ? AppTheme.teal : Color.white.opacity(0.85))
+                    .fill(isSelected ? AppTheme.teal : AppTheme.surfaceElevated)
                     .shadow(color: isSelected ? AppTheme.teal.opacity(0.3) : .clear, radius: 6, y: 2)
             )
             .overlay(
@@ -160,6 +169,9 @@ struct ContextPillButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeOut(duration: 0.2), value: isSelected)
+        .accessibilityLabel("\(context.title) scenario")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(isSelected ? "Double tap to deselect" : "Double tap to select")
     }
 }
 
@@ -200,6 +212,7 @@ struct GradientButton: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 }
 
@@ -228,11 +241,104 @@ struct SecondaryButton: View {
     }
 }
 
+struct OfflineBanner: View {
+    let message: String
+    let onRetry: () -> Void
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "wifi.slash")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.warning)
+                .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Working offline")
+                    .font(.system(.subheadline, design: .rounded, weight: .bold))
+                    .foregroundStyle(AppTheme.ink)
+                Text(message)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(AppTheme.mutedInk)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 8) {
+                    Button(action: onRetry) {
+                        Text("Retry")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Retry sync")
+
+                    Button(action: onDismiss) {
+                        Text("Dismiss")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(AppTheme.mutedInk)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Dismiss offline notice")
+                }
+                .padding(.top, 2)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(AppTheme.warning.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(AppTheme.warning.opacity(0.2), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+    }
+}
+
+struct InlineErrorBanner: View {
+    let message: String
+    let onDismiss: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(AppTheme.warning)
+                .font(.subheadline)
+
+            Text(message)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(AppTheme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppTheme.mutedInk)
+                    .padding(6)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss error")
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(AppTheme.warning.opacity(0.08))
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Error: \(message)")
+    }
+}
+
 struct LabeledTextField: View {
     let label: String
     let placeholder: String
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
+    var validationError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -247,12 +353,20 @@ struct LabeledTextField: View {
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color.white.opacity(0.9))
+                        .fill(AppTheme.surfaceElevated)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(AppTheme.border, lineWidth: 1)
+                        .stroke(validationError != nil ? AppTheme.warning : AppTheme.border, lineWidth: validationError != nil ? 1.5 : 1)
                 )
+                .accessibilityLabel(label)
+                .accessibilityValue(text.isEmpty ? placeholder : text)
+            if let error = validationError {
+                Text(error)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppTheme.warning)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 }

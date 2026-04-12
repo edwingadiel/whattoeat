@@ -54,6 +54,7 @@ struct RecommendationDetailView: View {
             Text(result.item.name)
                 .font(.system(size: 32, weight: .black, design: .rounded))
                 .foregroundStyle(AppTheme.ink)
+                .accessibilityAddTraits(.isHeader)
 
             Text(result.item.servingDescription)
                 .font(.system(.body, design: .rounded))
@@ -253,6 +254,15 @@ struct RecommendationDetailView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(mod.modificationName). \(deltaDescription(mod))")
+        .accessibilityAddTraits(isActive ? .isSelected : [])
+        .accessibilityHint(isActive ? "Double tap to remove modification" : "Double tap to apply modification")
+    }
+
+    private func deltaDescription(_ mod: ItemModification) -> String {
+        let cal = mod.calorieDelta >= 0 ? "+\(mod.calorieDelta)" : "\(mod.calorieDelta)"
+        let prot = mod.proteinDelta >= 0 ? "+\(mod.proteinDelta)" : "\(mod.proteinDelta)"
+        return "\(cal) calories, \(prot) grams protein"
     }
 
     private func modDelta(_ label: String, _ value: Int, color: Color) -> some View {
@@ -290,6 +300,7 @@ struct RecommendationDetailView: View {
                         store.submitFeedback(for: result.id, recommendationID: result.servedID, reason: reason)
                     }
                 }
+                .accessibilityLabel("Feedback options")
             } else {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")

@@ -33,6 +33,8 @@ struct FavoritesView: View {
                         }
                         .padding(12)
                         .cardStyle(fill: AppTheme.accentSoft.opacity(0.4))
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("\(store.favorites.count) of 5 saved meals\(store.favorites.count >= 5 ? ", limit reached" : "")")
                     }
 
                     if store.favoriteItems.isEmpty {
