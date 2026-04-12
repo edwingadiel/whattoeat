@@ -1,23 +1,29 @@
 import SwiftUI
 
 enum AppTheme {
-    // MARK: - Core palette
-    static let background = Color(hex: "F5EFE6")
-    static let surface = Color.white.opacity(0.82)
-    static let ink = Color(hex: "1E2A2F")
-    static let mutedInk = Color(hex: "6B7B80")
+    // MARK: - Adaptive palette (light/dark)
+    static let background = Color.adaptive(light: "F5EFE6", dark: "1A1A1E")
+    static let surface = Color.adaptive(light: "FFFFFF", dark: "2C2C30", lightAlpha: 0.82, darkAlpha: 1.0)
+    static let surfaceElevated = Color.adaptive(light: "FFFFFF", dark: "3A3A3E", lightAlpha: 0.9, darkAlpha: 1.0)
+    static let ink = Color.adaptive(light: "1E2A2F", dark: "F0F0F2")
+    static let mutedInk = Color.adaptive(light: "6B7B80", dark: "9CA3A8")
+    static let border = Color.adaptive(light: "000000", dark: "FFFFFF", lightAlpha: 0.06, darkAlpha: 0.08)
+
+    // MARK: - Brand colors (constant across modes)
     static let accent = Color(hex: "E86A33")
     static let accentSoft = Color(hex: "FDE8D8")
     static let teal = Color(hex: "2D8C7F")
     static let tealSoft = Color(hex: "D6EBE4")
-    static let border = Color.black.opacity(0.06)
     static let warning = Color(hex: "A64B2A")
     static let gold = Color(hex: "C79A3B")
     static let goldSoft = Color(hex: "FDF4E3")
 
     // MARK: - Gradients
     static let backgroundGradient = LinearGradient(
-        colors: [Color(hex: "F7F1E8"), Color(hex: "E7EFEA")],
+        colors: [
+            Color.adaptive(light: "F7F1E8", dark: "1A1A1E"),
+            Color.adaptive(light: "E7EFEA", dark: "1E2024")
+        ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
@@ -51,6 +57,8 @@ enum AppTheme {
     static let buttonRadius: CGFloat = 16
 }
 
+// MARK: - Color Helpers
+
 extension Color {
     init(hex: String) {
         let sanitized = hex.replacingOccurrences(of: "#", with: "")
@@ -60,7 +68,23 @@ extension Color {
         let blue = Double(value & 0x0000FF) / 255
         self.init(red: red, green: green, blue: blue)
     }
+
+    /// Adaptive color that uses one hex value in light mode and another in dark mode
+    static func adaptive(light: String, dark: String, lightAlpha: Double = 1.0, darkAlpha: Double = 1.0) -> Color {
+        Color(UIColor { traits in
+            let hex = traits.userInterfaceStyle == .dark ? dark : light
+            let alpha = traits.userInterfaceStyle == .dark ? darkAlpha : lightAlpha
+            let sanitized = hex.replacingOccurrences(of: "#", with: "")
+            let value = UInt64(sanitized, radix: 16) ?? 0
+            let r = CGFloat((value & 0xFF0000) >> 16) / 255
+            let g = CGFloat((value & 0x00FF00) >> 8) / 255
+            let b = CGFloat(value & 0x0000FF) / 255
+            return UIColor(red: r, green: g, blue: b, alpha: alpha)
+        })
+    }
 }
+
+// MARK: - View Modifiers
 
 extension View {
     func cardStyle(fill: Color = AppTheme.surface) -> some View {

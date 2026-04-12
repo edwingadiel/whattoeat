@@ -511,6 +511,445 @@
       "modifications": [
         { "id": "cfa_no_dressing", "modificationName": "No dressing", "calorieDelta": -80, "proteinDelta": 0, "carbsDelta": -6, "fatDelta": -8 }
       ]
+    },
+    {
+      "id": "mcd_sausage_egg_biscuit",
+      "restaurantID": "mcdonalds",
+      "name": "Sausage Egg McMuffin",
+      "category": "Breakfast",
+      "servingDescription": "Sausage patty, egg, cheese, English muffin",
+      "calories": 480,
+      "protein": 21,
+      "carbs": 30,
+      "fat": 31,
+      "sodium": 950,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["breakfast", "drive-thru"],
+      "tags": ["breakfast", "contains-dairy"],
+      "popularityPrior": 0.72,
+      "sourceURL": "https://www.mcdonalds.com/us/en-us/about-our-food/nutrition-calculator.html",
+      "modifications": [
+        { "id": "mcd_no_sausage", "modificationName": "Swap sausage for Canadian bacon", "calorieDelta": -150, "proteinDelta": -3, "carbsDelta": 0, "fatDelta": -18 }
+      ]
+    },
+    {
+      "id": "mcd_hamburger",
+      "restaurantID": "mcdonalds",
+      "name": "Hamburger",
+      "category": "Burger",
+      "servingDescription": "Classic single-patty beef hamburger",
+      "calories": 250,
+      "protein": 12,
+      "carbs": 31,
+      "fat": 9,
+      "sodium": 510,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["snack", "lunch", "cheap", "drive-thru", "latenight"],
+      "tags": ["cheap"],
+      "popularityPrior": 0.55,
+      "sourceURL": "https://www.mcdonalds.com/us/en-us/about-our-food/nutrition-calculator.html",
+      "modifications": [
+        { "id": "mcd_add_patty", "modificationName": "Add extra beef patty", "calorieDelta": 110, "proteinDelta": 10, "carbsDelta": 0, "fatDelta": 7 }
+      ]
+    },
+    {
+      "id": "mcd_fruit_yogurt_parfait",
+      "restaurantID": "mcdonalds",
+      "name": "Fruit & Yogurt Parfait",
+      "category": "Snack",
+      "servingDescription": "Low-fat yogurt with berries and granola",
+      "calories": 150,
+      "protein": 4,
+      "carbs": 30,
+      "fat": 2,
+      "sodium": 70,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["breakfast", "snack", "cheap", "no-cook"],
+      "tags": ["light", "contains-dairy", "vegetarian"],
+      "popularityPrior": 0.5,
+      "sourceURL": "https://www.mcdonalds.com/us/en-us/about-our-food/nutrition-calculator.html",
+      "modifications": [
+        { "id": "mcd_hold_granola", "modificationName": "Hold the granola", "calorieDelta": -30, "proteinDelta": -1, "carbsDelta": -7, "fatDelta": -1 }
+      ]
+    },
+    {
+      "id": "mcd_apple_slices",
+      "restaurantID": "mcdonalds",
+      "name": "Apple Slices",
+      "category": "Side",
+      "servingDescription": "A small bag of fresh apple slices",
+      "calories": 15,
+      "protein": 0,
+      "carbs": 4,
+      "fat": 0,
+      "sodium": 0,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["snack", "cheap", "no-cook"],
+      "tags": ["light", "vegetarian", "vegan", "dairy-free"],
+      "popularityPrior": 0.4,
+      "sourceURL": "https://www.mcdonalds.com/us/en-us/about-our-food/nutrition-calculator.html",
+      "modifications": []
+    },
+    {
+      "id": "wendys_baked_potato_plain",
+      "restaurantID": "wendys",
+      "name": "Plain Baked Potato",
+      "category": "Side",
+      "servingDescription": "Large baked russet potato, unseasoned",
+      "calories": 270,
+      "protein": 7,
+      "carbs": 61,
+      "fat": 0,
+      "sodium": 40,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "cheap", "meal-prep"],
+      "tags": ["vegetarian", "vegan", "dairy-free", "lean"],
+      "popularityPrior": 0.6,
+      "sourceURL": "https://www.wendys.com/en-uk/nutrition-allergens",
+      "modifications": [
+        { "id": "wendys_add_chili_topping", "modificationName": "Top with small chili", "calorieDelta": 170, "proteinDelta": 12, "carbsDelta": 17, "fatDelta": 6 }
+      ]
+    },
+    {
+      "id": "wendys_apple_pecan_salad",
+      "restaurantID": "wendys",
+      "name": "Apple Pecan Salad",
+      "category": "Salad",
+      "servingDescription": "Chicken, apples, cranberries, pecans, feta",
+      "calories": 430,
+      "protein": 34,
+      "carbs": 32,
+      "fat": 19,
+      "sodium": 1110,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "meal-prep", "no-cook"],
+      "tags": ["high-protein", "contains-dairy"],
+      "popularityPrior": 0.68,
+      "sourceURL": "https://www.wendys.com/en-uk/nutrition-allergens",
+      "modifications": [
+        { "id": "wendys_no_feta", "modificationName": "No feta cheese", "calorieDelta": -70, "proteinDelta": -4, "carbsDelta": -1, "fatDelta": -6 }
+      ]
+    },
+    {
+      "id": "wendys_breakfast_baconator",
+      "restaurantID": "wendys",
+      "name": "Breakfast Baconator",
+      "category": "Breakfast",
+      "servingDescription": "Sausage, bacon, egg, cheese, brioche bun",
+      "calories": 730,
+      "protein": 34,
+      "carbs": 36,
+      "fat": 49,
+      "sodium": 1580,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["breakfast", "drive-thru", "post-workout"],
+      "tags": ["high-protein", "contains-dairy"],
+      "popularityPrior": 0.7,
+      "sourceURL": "https://www.wendys.com/en-uk/nutrition-allergens",
+      "modifications": [
+        { "id": "wendys_drop_bun", "modificationName": "Swap brioche for English muffin", "calorieDelta": -80, "proteinDelta": 0, "carbsDelta": -10, "fatDelta": -4 }
+      ]
+    },
+    {
+      "id": "taco_cantina_bowl_chicken",
+      "restaurantID": "tacobell",
+      "name": "Cantina Chicken Bowl",
+      "category": "Bowl",
+      "servingDescription": "Chicken, rice, black beans, lettuce, pico, guac",
+      "calories": 560,
+      "protein": 28,
+      "carbs": 60,
+      "fat": 22,
+      "sodium": 1420,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "meal-prep"],
+      "tags": ["high-protein", "filling"],
+      "popularityPrior": 0.74,
+      "sourceURL": "https://www.tacobell.com/nutrition/calculator",
+      "modifications": [
+        { "id": "taco_skip_rice", "modificationName": "Hold the rice", "calorieDelta": -170, "proteinDelta": -3, "carbsDelta": -37, "fatDelta": -2 }
+      ]
+    },
+    {
+      "id": "taco_crunchy_taco",
+      "restaurantID": "tacobell",
+      "name": "Crunchy Taco",
+      "category": "Taco",
+      "servingDescription": "Seasoned beef, lettuce, cheese in a crunchy shell",
+      "calories": 170,
+      "protein": 8,
+      "carbs": 13,
+      "fat": 9,
+      "sodium": 310,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["snack", "lunch", "cheap", "drive-thru", "latenight"],
+      "tags": ["snack", "contains-dairy"],
+      "popularityPrior": 0.62,
+      "sourceURL": "https://www.tacobell.com/nutrition/calculator",
+      "modifications": [
+        { "id": "taco_sub_beef_chicken", "modificationName": "Sub beef for shredded chicken", "calorieDelta": -10, "proteinDelta": 2, "carbsDelta": 0, "fatDelta": -2 }
+      ]
+    },
+    {
+      "id": "taco_veggie_power_bowl",
+      "restaurantID": "tacobell",
+      "name": "Veggie Power Menu Bowl",
+      "category": "Bowl",
+      "servingDescription": "Rice, beans, fajita veggies, guac, pico",
+      "calories": 430,
+      "protein": 12,
+      "carbs": 58,
+      "fat": 16,
+      "sodium": 1290,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "meal-prep", "cheap"],
+      "tags": ["vegetarian", "vegan", "dairy-free", "filling"],
+      "popularityPrior": 0.58,
+      "sourceURL": "https://www.tacobell.com/nutrition/calculator",
+      "modifications": [
+        { "id": "taco_add_double_beans", "modificationName": "Double black beans", "calorieDelta": 80, "proteinDelta": 6, "carbsDelta": 15, "fatDelta": 0 }
+      ]
+    },
+    {
+      "id": "taco_crunchwrap_supreme",
+      "restaurantID": "tacobell",
+      "name": "Crunchwrap Supreme",
+      "category": "Entree",
+      "servingDescription": "Seasoned beef, nacho cheese, lettuce, tomato in a tortilla",
+      "calories": 540,
+      "protein": 16,
+      "carbs": 71,
+      "fat": 21,
+      "sodium": 1210,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "drive-thru", "latenight"],
+      "tags": ["filling", "contains-dairy"],
+      "popularityPrior": 0.78,
+      "sourceURL": "https://www.tacobell.com/nutrition/calculator",
+      "modifications": [
+        { "id": "taco_fresco_crunchwrap", "modificationName": "Make it Fresco (swap cheese and sour cream for pico)", "calorieDelta": -70, "proteinDelta": -2, "carbsDelta": 1, "fatDelta": -8 }
+      ]
+    },
+    {
+      "id": "subway_steak_cheese_6",
+      "restaurantID": "subway",
+      "name": "Steak & Cheese 6-inch",
+      "category": "Sub",
+      "servingDescription": "6-inch steak and cheese on Italian bread",
+      "calories": 380,
+      "protein": 26,
+      "carbs": 42,
+      "fat": 11,
+      "sodium": 920,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "post-workout"],
+      "tags": ["high-protein", "contains-dairy"],
+      "popularityPrior": 0.68,
+      "sourceURL": "https://www.subway.com/en-us/menunutrition/menu/nutrition",
+      "modifications": [
+        { "id": "subway_wheat_bread", "modificationName": "Switch to 9-grain wheat", "calorieDelta": -10, "proteinDelta": 0, "carbsDelta": -2, "fatDelta": 0 }
+      ]
+    },
+    {
+      "id": "subway_tuna_protein_bowl",
+      "restaurantID": "subway",
+      "name": "Tuna Protein Bowl",
+      "category": "Protein Bowl",
+      "servingDescription": "Tuna, spinach, tomato, cucumbers, olives",
+      "calories": 470,
+      "protein": 27,
+      "carbs": 11,
+      "fat": 36,
+      "sodium": 780,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "no-cook", "meal-prep"],
+      "tags": ["high-protein", "low-carb"],
+      "popularityPrior": 0.6,
+      "sourceURL": "https://www.subway.com/en-us/menunutrition/menu/nutrition",
+      "modifications": [
+        { "id": "subway_light_mayo", "modificationName": "Light mayo instead of regular", "calorieDelta": -90, "proteinDelta": 0, "carbsDelta": 0, "fatDelta": -10 }
+      ]
+    },
+    {
+      "id": "subway_veggie_delite_6",
+      "restaurantID": "subway",
+      "name": "Veggie Delite 6-inch",
+      "category": "Sub",
+      "servingDescription": "6-inch sub with all the fresh veggies",
+      "calories": 200,
+      "protein": 8,
+      "carbs": 39,
+      "fat": 2,
+      "sodium": 290,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "snack", "cheap", "no-cook"],
+      "tags": ["vegetarian", "vegan", "dairy-free", "lean"],
+      "popularityPrior": 0.45,
+      "sourceURL": "https://www.subway.com/en-us/menunutrition/menu/nutrition",
+      "modifications": [
+        { "id": "subway_add_cheese", "modificationName": "Add cheese", "calorieDelta": 45, "proteinDelta": 2, "carbsDelta": 0, "fatDelta": 4 }
+      ]
+    },
+    {
+      "id": "chipotle_barbacoa_bowl",
+      "restaurantID": "chipotle",
+      "name": "Barbacoa Burrito Bowl",
+      "category": "Bowl",
+      "servingDescription": "Barbacoa beef, rice, black beans, salsa, lettuce",
+      "calories": 640,
+      "protein": 40,
+      "carbs": 56,
+      "fat": 24,
+      "sodium": 1360,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "post-workout", "meal-prep"],
+      "tags": ["high-protein", "filling"],
+      "popularityPrior": 0.75,
+      "sourceURL": "https://www.chipotle.com/nutrition-calculator",
+      "modifications": [
+        { "id": "chipotle_no_rice", "modificationName": "No rice", "calorieDelta": -210, "proteinDelta": -4, "carbsDelta": -40, "fatDelta": -4 }
+      ]
+    },
+    {
+      "id": "chipotle_veggie_bowl",
+      "restaurantID": "chipotle",
+      "name": "Veggie Burrito Bowl",
+      "category": "Bowl",
+      "servingDescription": "Rice, beans, fajita veggies, salsa, guac",
+      "calories": 620,
+      "protein": 16,
+      "carbs": 82,
+      "fat": 23,
+      "sodium": 1070,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "meal-prep", "no-cook"],
+      "tags": ["vegetarian", "vegan", "dairy-free", "filling"],
+      "popularityPrior": 0.64,
+      "sourceURL": "https://www.chipotle.com/nutrition-calculator",
+      "modifications": [
+        { "id": "chipotle_half_rice", "modificationName": "Half portion of rice", "calorieDelta": -100, "proteinDelta": -2, "carbsDelta": -20, "fatDelta": 0 }
+      ]
+    },
+    {
+      "id": "chipotle_kids_chicken_taco",
+      "restaurantID": "chipotle",
+      "name": "Kids Build-Your-Own Chicken Soft Taco",
+      "category": "Taco",
+      "servingDescription": "Soft taco with chicken and cheese (kids size)",
+      "calories": 190,
+      "protein": 17,
+      "carbs": 14,
+      "fat": 7,
+      "sodium": 390,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["snack", "lunch", "cheap", "no-cook"],
+      "tags": ["high-protein", "light"],
+      "popularityPrior": 0.48,
+      "sourceURL": "https://www.chipotle.com/nutrition-calculator",
+      "modifications": [
+        { "id": "chipotle_skip_cheese_kid", "modificationName": "Skip cheese", "calorieDelta": -45, "proteinDelta": -2, "carbsDelta": 0, "fatDelta": -4 }
+      ]
+    },
+    {
+      "id": "cfa_market_salad",
+      "restaurantID": "chickfila",
+      "name": "Grilled Market Salad",
+      "category": "Salad",
+      "servingDescription": "Grilled chicken, mixed greens, berries, granola, cheese",
+      "calories": 340,
+      "protein": 29,
+      "carbs": 29,
+      "fat": 13,
+      "sodium": 710,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "post-workout", "meal-prep", "no-cook"],
+      "tags": ["high-protein", "contains-dairy"],
+      "popularityPrior": 0.72,
+      "sourceURL": "https://www.chick-fil-a.com/nutrition-allergens",
+      "modifications": [
+        { "id": "cfa_no_granola", "modificationName": "Hold the granola", "calorieDelta": -80, "proteinDelta": -1, "carbsDelta": -13, "fatDelta": -2 }
+      ]
+    },
+    {
+      "id": "cfa_greek_yogurt_parfait",
+      "restaurantID": "chickfila",
+      "name": "Greek Yogurt Parfait",
+      "category": "Snack",
+      "servingDescription": "Vanilla Greek yogurt with granola and berries",
+      "calories": 240,
+      "protein": 14,
+      "carbs": 37,
+      "fat": 4,
+      "sodium": 85,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["breakfast", "snack", "no-cook"],
+      "tags": ["high-protein", "contains-dairy", "vegetarian"],
+      "popularityPrior": 0.62,
+      "sourceURL": "https://www.chick-fil-a.com/nutrition-allergens",
+      "modifications": [
+        { "id": "cfa_parfait_hold_granola", "modificationName": "Hold the granola", "calorieDelta": -70, "proteinDelta": -1, "carbsDelta": -14, "fatDelta": -2 }
+      ]
+    },
+    {
+      "id": "cfa_spicy_deluxe",
+      "restaurantID": "chickfila",
+      "name": "Spicy Chicken Deluxe Sandwich",
+      "category": "Sandwich",
+      "servingDescription": "Spicy breaded chicken, lettuce, tomato, cheese",
+      "calories": 540,
+      "protein": 29,
+      "carbs": 45,
+      "fat": 26,
+      "sodium": 1700,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["lunch", "dinner", "drive-thru"],
+      "tags": ["high-protein", "contains-dairy"],
+      "popularityPrior": 0.72,
+      "sourceURL": "https://www.chick-fil-a.com/nutrition-allergens",
+      "modifications": [
+        { "id": "cfa_no_cheese_deluxe", "modificationName": "No cheese", "calorieDelta": -50, "proteinDelta": -3, "carbsDelta": 0, "fatDelta": -4 }
+      ]
+    },
+    {
+      "id": "cfa_grilled_nuggets_8",
+      "restaurantID": "chickfila",
+      "name": "8-Count Grilled Nuggets",
+      "category": "Entree",
+      "servingDescription": "Grilled nuggets (smaller portion)",
+      "calories": 130,
+      "protein": 25,
+      "carbs": 1,
+      "fat": 3,
+      "sodium": 440,
+      "sourceVersion": "2026-04-curated",
+      "active": true,
+      "contexts": ["snack", "lunch", "post-workout", "drive-thru", "cheap"],
+      "tags": ["high-protein", "low-carb", "dairy-free"],
+      "popularityPrior": 0.82,
+      "sourceURL": "https://www.chick-fil-a.com/nutrition-allergens",
+      "modifications": [
+        { "id": "cfa_upgrade_12", "modificationName": "Upgrade to 12 count", "calorieDelta": 70, "proteinDelta": 13, "carbsDelta": 1, "fatDelta": 1 }
+      ]
     }
   ]
 }

@@ -12,6 +12,8 @@ final class AppStore: ObservableObject {
     @Published var offerings: [ProductOffering] = [.defaultMonthly, .defaultAnnual]
     @Published var isPurchasing = false
     @Published var purchaseError: String?
+    @Published var syncStatus: SyncStatus = .idle
+    @Published var lastSyncError: String?
 
     var remoteSyncEnabled: Bool { syncCoordinator.isRemoteSyncEnabled }
     var analyticsEnabled: Bool { environment.analytics is PostHogAnalyticsService }
@@ -69,7 +71,18 @@ final class AppStore: ObservableObject {
 
         identifyUser()
 
-        guard let snapshot = await syncCoordinator.bootstrap(localProfile: profile) else { return }
+        syncStatus = .syncing
+
+        guard let snapshot = await syncCoordinator.bootstrap(localProfile: profile) else {
+            // Bootstrap returned nil — sync disabled or network failure
+            if remoteSyncEnabled {
+                syncStatus = .offline
+                lastSyncError = "Can't reach the cloud. Your changes are saved locally and will sync when you're back online."
+            } else {
+                syncStatus = .idle
+            }
+            return
+        }
 
         identifyUser()
 
@@ -105,6 +118,23 @@ final class AppStore: ObservableObject {
             history: history,
             feedback: feedbackEntries
         )
+
+        syncStatus = .synced
+        lastSyncError = nil
+    }
+
+    func dismissSyncError() {
+        lastSyncError = nil
+        if case .failed = syncStatus {
+            syncStatus = .idle
+        } else if case .offline = syncStatus {
+            syncStatus = .idle
+        }
+    }
+
+    func retrySync() {
+        hasBootstrappedRemote = false
+        Task { await bootstrap() }
     }
 
     // MARK: - Computed

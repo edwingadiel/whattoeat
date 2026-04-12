@@ -86,7 +86,7 @@ struct ProfileView: View {
                         .disabled(viewModel.isPurchasing)
                     }
                     .padding(20)
-                    .cardStyle(fill: viewModel.isPlus ? AppTheme.tealSoft.opacity(0.5) : Color.white.opacity(0.82))
+                    .cardStyle(fill: viewModel.isPlus ? AppTheme.tealSoft.opacity(0.5) : AppTheme.surface)
 
                     // MARK: - Defaults
                     VStack(alignment: .leading, spacing: 12) {
@@ -262,30 +262,80 @@ struct ProfileView: View {
 
     @ViewBuilder
     private var syncStatusBanner: some View {
+        let (icon, title, subtitle, color) = syncBannerContent
         HStack(spacing: 10) {
-            Image(systemName: store.remoteSyncEnabled ? "checkmark.icloud.fill" : "icloud.slash")
+            Image(systemName: icon)
                 .font(.subheadline)
-                .foregroundStyle(store.remoteSyncEnabled ? AppTheme.teal : AppTheme.mutedInk.opacity(0.5))
+                .foregroundStyle(color)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(store.remoteSyncEnabled ? "Synced" : "Local only")
+                Text(title)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
                     .foregroundStyle(AppTheme.ink)
-                Text(store.remoteSyncEnabled
-                     ? "Your data is backed up to the cloud."
-                     : "Data stays on this device only.")
+                Text(subtitle)
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(AppTheme.mutedInk)
             }
 
             Spacer()
 
-            Circle()
-                .fill(store.remoteSyncEnabled ? AppTheme.teal : AppTheme.mutedInk.opacity(0.25))
-                .frame(width: 8, height: 8)
+            if case .offline = store.syncStatus {
+                Button(action: store.retrySync) {
+                    Text("Retry")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.accent)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Retry sync")
+            } else if case .failed = store.syncStatus {
+                Button(action: store.retrySync) {
+                    Text("Retry")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.accent)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Retry sync")
+            } else if store.syncStatus.isActive {
+                ProgressView()
+                    .controlSize(.small)
+            } else {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+            }
         }
         .padding(14)
-        .cardStyle(fill: store.remoteSyncEnabled ? AppTheme.tealSoft.opacity(0.4) : Color.white.opacity(0.6))
+        .cardStyle(fill: bannerBackgroundFill)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title). \(subtitle)")
+    }
+
+    private var syncBannerContent: (String, String, String, Color) {
+        switch store.syncStatus {
+        case .idle where store.remoteSyncEnabled:
+            return ("checkmark.icloud.fill", "Synced", "Your data is backed up to the cloud.", AppTheme.teal)
+        case .idle:
+            return ("icloud.slash", "Local only", "Data stays on this device only.", AppTheme.mutedInk.opacity(0.5))
+        case .syncing:
+            return ("arrow.triangle.2.circlepath.icloud", "Syncing…", "Bringing your data up to date.", AppTheme.teal)
+        case .synced:
+            return ("checkmark.icloud.fill", "Synced", "Your data is backed up to the cloud.", AppTheme.teal)
+        case .offline:
+            return ("wifi.slash", "Offline", "Changes saved locally — will sync when back online.", AppTheme.warning)
+        case .failed(let message):
+            return ("exclamationmark.icloud.fill", "Sync issue", message, AppTheme.warning)
+        }
+    }
+
+    private var bannerBackgroundFill: Color {
+        switch store.syncStatus {
+        case .offline, .failed:
+            return AppTheme.warning.opacity(0.08)
+        case .synced, .syncing:
+            return AppTheme.tealSoft.opacity(0.4)
+        default:
+            return AppTheme.surface
+        }
     }
 
     // MARK: - History Row
@@ -334,6 +384,9 @@ struct ProfileView: View {
             }
         }
         .padding(.vertical, 6)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(entry.topResultName), \(entry.query.targetCalories) calories, \(entry.query.targetProtein) grams protein, \(relativeTimestamp(entry.createdAt))")
+        .accessibilityHint("Double tap to re-run this search")
     }
 
     // MARK: - Usage Gauge
@@ -369,6 +422,8 @@ struct ProfileView: View {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(color.opacity(0.06))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(used) of \(limit) used")
     }
 
     // MARK: - Integration Tile
@@ -398,6 +453,8 @@ struct ProfileView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(active ? AppTheme.tealSoft.opacity(0.3) : AppTheme.mutedInk.opacity(0.03))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(name) integration, \(active ? "connected" : "not configured")")
     }
 
     private func profileRow(label: String, value: String) -> some View {

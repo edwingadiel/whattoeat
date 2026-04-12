@@ -32,6 +32,7 @@ struct PaywallView: View {
                             .multilineTextAlignment(.center)
                             .opacity(didAppear ? 1 : 0)
                             .offset(y: didAppear ? 0 : 10)
+                            .accessibilityAddTraits(.isHeader)
 
                         Text(reason.title)
                             .font(.system(.body, design: .rounded, weight: .medium))
@@ -167,6 +168,7 @@ struct PaywallView: View {
                             .font(.title3)
                             .foregroundStyle(AppTheme.mutedInk.opacity(0.5))
                     }
+                    .accessibilityLabel("Close paywall")
                 }
             }
             .task {
@@ -215,6 +217,7 @@ private struct PricingCard: View {
     let onSelect: () -> Void
 
     var body: some View {
+        let periodLabel = offering.product == .plusAnnual ? "Annual" : "Monthly"
         Button(action: onSelect) {
             HStack(spacing: 16) {
                 // Radio
@@ -271,7 +274,7 @@ private struct PricingCard: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: AppTheme.cardRadius, style: .continuous)
-                    .fill(isSelected ? AppTheme.accentSoft.opacity(0.5) : Color.white.opacity(0.82))
+                    .fill(isSelected ? AppTheme.accentSoft.opacity(0.5) : AppTheme.surface)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.cardRadius, style: .continuous)
@@ -281,5 +284,8 @@ private struct PricingCard: View {
         }
         .buttonStyle(.plain)
         .animation(.easeOut(duration: 0.2), value: isSelected)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(periodLabel) plan, \(offering.localizedPrice) per \(offering.localizedPeriod)\(isBestValue ? ", best value" : "")")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

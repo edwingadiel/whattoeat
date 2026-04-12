@@ -17,6 +17,7 @@ struct OnboardingView: View {
                     Text("WhatToEat")
                         .font(.system(size: 42, weight: .black, design: .rounded))
                         .foregroundStyle(AppTheme.ink)
+                        .accessibilityAddTraits(.isHeader)
 
                     Text("Fast restaurant picks that\nstay inside your macros.")
                         .font(.system(.title3, design: .rounded, weight: .medium))
@@ -111,12 +112,14 @@ struct OnboardingView: View {
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.white.opacity(0.9))
+                                .fill(AppTheme.surfaceElevated)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(AppTheme.border, lineWidth: 1)
                         )
+                        .accessibilityLabel("Foods to never suggest")
+                        .accessibilityHint("Enter foods separated by commas")
                 }
                 .padding(20)
                 .cardStyle()
@@ -151,5 +154,7 @@ struct OnboardingView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .cardStyle()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text.replacingOccurrences(of: "\n", with: " "))
     }
 }

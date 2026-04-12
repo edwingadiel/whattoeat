@@ -18,11 +18,28 @@ struct HomeView: View {
                         Text("What are you\ntrying to hit?")
                             .font(.system(size: 34, weight: .black, design: .rounded))
                             .foregroundStyle(AppTheme.ink)
+                            .accessibilityAddTraits(.isHeader)
                         Text("Three strong picks — no menu scrolling.")
                             .font(.system(.body, design: .rounded))
                             .foregroundStyle(AppTheme.mutedInk)
                     }
                     .padding(.top, 12)
+
+                    // MARK: - Offline banner
+                    if !store.syncStatus.isHealthy, let error = store.lastSyncError {
+                        OfflineBanner(message: error) {
+                            store.retrySync()
+                        } onDismiss: {
+                            store.dismissSyncError()
+                        }
+                    }
+
+                    // MARK: - Search error
+                    if let error = viewModel.searchError {
+                        InlineErrorBanner(message: error) {
+                            viewModel.dismissError()
+                        }
+                    }
 
                     // MARK: - Targets
                     VStack(alignment: .leading, spacing: 16) {
@@ -34,13 +51,15 @@ struct HomeView: View {
                                 .font(.system(.headline, design: .rounded, weight: .bold))
                         }
 
-                        HStack(spacing: 12) {
-                            LabeledTextField(label: "Calories", placeholder: "550", text: $viewModel.targetCalories, keyboardType: .numberPad)
-                            LabeledTextField(label: "Protein (g)", placeholder: "35", text: $viewModel.targetProtein, keyboardType: .numberPad)
+                        HStack(alignment: .top, spacing: 12) {
+                            LabeledTextField(label: "Calories", placeholder: "550", text: $viewModel.targetCalories, keyboardType: .numberPad, validationError: viewModel.calorieError)
+                            LabeledTextField(label: "Protein (g)", placeholder: "35", text: $viewModel.targetProtein, keyboardType: .numberPad, validationError: viewModel.proteinError)
                         }
                     }
                     .padding(20)
                     .cardStyle()
+                    .animation(.easeOut(duration: 0.2), value: viewModel.calorieError)
+                    .animation(.easeOut(duration: 0.2), value: viewModel.proteinError)
 
                     // MARK: - Advanced macros
                     VStack(alignment: .leading, spacing: 16) {
@@ -146,8 +165,14 @@ struct HomeView: View {
 
                     // MARK: - Search CTA
                     VStack(spacing: 8) {
-                        GradientButton(title: "Find My Best Options") {
-                            viewModel.runSearch()
+                        GradientButton(title: store.searchesRemainingToday == 0 && !store.entitlement.isPlus
+                                       ? "Upgrade to keep searching"
+                                       : "Find My Best Options") {
+                            if store.searchesRemainingToday == 0 && !store.entitlement.isPlus {
+                                store.activePaywallReason = .dailySearchLimit
+                            } else {
+                                viewModel.runSearch()
+                            }
                         }
 
                         if !store.entitlement.isPlus {
@@ -163,6 +188,10 @@ struct HomeView: View {
                                     .foregroundStyle(remaining == 0 ? AppTheme.warning : AppTheme.mutedInk)
                             }
                             .transition(.opacity)
+                            .accessibilityElement(children: .combine)
+                            .accessibilityLabel(remaining == 0
+                                ? "Daily search limit reached"
+                                : "\(remaining) searches remaining today")
                         }
                     }
                     .padding(.top, 4)

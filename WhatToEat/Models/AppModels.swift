@@ -301,6 +301,28 @@ struct UserFeedback: Codable, Identifiable, Hashable, Sendable {
     let createdAt: Date
 }
 
+enum SyncStatus: Equatable, Sendable {
+    case idle
+    case syncing
+    case synced
+    case offline
+    case failed(String)
+
+    var isActive: Bool {
+        switch self {
+        case .syncing: return true
+        default: return false
+        }
+    }
+
+    var isHealthy: Bool {
+        switch self {
+        case .idle, .synced, .syncing: return true
+        case .offline, .failed: return false
+        }
+    }
+}
+
 enum PaywallReason: String, Identifiable, Sendable {
     case dailySearchLimit
     case favoritesLimit
