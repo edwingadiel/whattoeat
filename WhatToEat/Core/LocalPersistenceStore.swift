@@ -7,6 +7,7 @@ struct LocalPersistenceStore {
     private let historyKey = "whattoeat.history"
     private let searchesKey = "whattoeat.searches"
     private let onboardingKey = "whattoeat.onboarding.done"
+    private let catalogVersionKey = "whattoeat.catalog.version"
 
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
@@ -81,5 +82,13 @@ struct LocalPersistenceStore {
 
     func saveHasCompletedOnboarding(_ value: Bool) {
         defaults.set(value, forKey: onboardingKey)
+    }
+
+    func loadCatalogVersion() -> String? {
+        defaults.string(forKey: catalogVersionKey)
+    }
+
+    func saveCatalogVersion(_ version: String) {
+        defaults.set(version, forKey: catalogVersionKey)
     }
 }

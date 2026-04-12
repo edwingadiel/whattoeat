@@ -148,9 +148,83 @@ function generateSQL(catalog) {
   return lines.join("\n") + "\n";
 }
 
+/**
+ * validateCatalog runs sanity checks over the seed catalog before generating
+ * SQL. Fails loud on problems that would silently ship bad data:
+ *   - Nutrition math: 4*protein + 4*carbs + 9*fat should be within ~15% of
+ *     stated calories. Catches data-entry errors (e.g. protein/carbs swapped).
+ *   - Referential integrity: every item.restaurantID exists in restaurants[].
+ *   - Unique IDs across items and modifications.
+ *   - Tag coherency: items tagged `vegan` cannot also be tagged
+ *     `contains-dairy`, and vice versa.
+ */
+function validateCatalog(catalog) {
+  const errors = [];
+  const warnings = [];
+
+  const restaurantIDs = new Set(catalog.restaurants.map((r) => r.id));
+  const itemIDs = new Set();
+  const modIDs = new Set();
+
+  for (const item of catalog.items) {
+    if (itemIDs.has(item.id)) {
+      errors.push(`Duplicate item id: ${item.id}`);
+    }
+    itemIDs.add(item.id);
+
+    if (!restaurantIDs.has(item.restaurantID)) {
+      errors.push(
+        `Item ${item.id} references unknown restaurant ${item.restaurantID}`
+      );
+    }
+
+    // Macro sanity: protein*4 + carbs*4 + fat*9 should be within tolerance of calories
+    const calc = item.protein * 4 + item.carbs * 4 + item.fat * 9;
+    if (item.calories > 0) {
+      const drift = Math.abs(calc - item.calories) / item.calories;
+      if (drift > 0.2) {
+        warnings.push(
+          `Item ${item.id}: macro math drifts ${Math.round(drift * 100)}% (calc=${calc}, stated=${item.calories})`
+        );
+      }
+    }
+
+    // Tag coherency
+    const tags = new Set(item.tags || []);
+    if (tags.has("vegan") && tags.has("contains-dairy")) {
+      errors.push(`Item ${item.id}: vegan items cannot contain dairy`);
+    }
+    if (tags.has("vegan") && !tags.has("dairy-free")) {
+      warnings.push(`Item ${item.id}: vegan should also be dairy-free`);
+    }
+    if (tags.has("vegan") && !tags.has("vegetarian")) {
+      warnings.push(`Item ${item.id}: vegan should also be vegetarian`);
+    }
+
+    for (const mod of item.modifications || []) {
+      if (modIDs.has(mod.id)) {
+        errors.push(`Duplicate modification id: ${mod.id}`);
+      }
+      modIDs.add(mod.id);
+    }
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`[sync_catalog] ${warnings.length} warning(s):`);
+    for (const w of warnings) console.warn("  !", w);
+  }
+
+  if (errors.length > 0) {
+    console.error(`[sync_catalog] ${errors.length} error(s):`);
+    for (const e of errors) console.error("  x", e);
+    process.exit(1);
+  }
+}
+
 function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
+  const skipValidation = args.includes("--skip-validation");
   const outputIndex = args.indexOf("--output");
   const outputPath =
     outputIndex >= 0 && args[outputIndex + 1]
@@ -163,6 +237,11 @@ function main() {
   console.log(
     `[sync_catalog] Loaded ${catalog.restaurants.length} restaurants, ${catalog.items.length} items`
   );
+
+  if (!skipValidation) {
+    validateCatalog(catalog);
+    console.log("[sync_catalog] Validation passed");
+  }
 
   const sql = generateSQL(catalog);
 

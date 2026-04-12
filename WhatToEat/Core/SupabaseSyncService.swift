@@ -88,6 +88,22 @@ actor SupabaseSyncService: RemoteUserSyncing {
             .execute()
     }
 
+    func fetchCatalogVersion() async throws -> String? {
+        // The RPC is added by the 20260412130000_catalog_version migration;
+        // it returns the currently published catalog version. Servers that
+        // haven't been migrated yet return a 404 — treat that as "no
+        // versioning available" rather than an error.
+        do {
+            let version: String = try await client
+                .rpc("catalog_version")
+                .execute()
+                .value
+            return version
+        } catch {
+            return nil
+        }
+    }
+
     func currentUserID() async throws -> String {
         try await ensureAnonymousUserID()
     }

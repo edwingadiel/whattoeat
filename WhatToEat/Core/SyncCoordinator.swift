@@ -31,6 +31,20 @@ final class SyncCoordinator {
         }
     }
 
+    /// Probes the backend for the latest catalog version. Returns nil when
+    /// remote sync is unavailable or the server hasn't been upgraded yet.
+    /// Callers compare the result to the locally cached version to decide
+    /// whether a fresh catalog pull is needed.
+    func fetchCatalogVersion() async -> String? {
+        guard let remoteSync, isRemoteSyncEnabled else { return nil }
+        do {
+            return try await remoteSync.fetchCatalogVersion()
+        } catch {
+            crashReporter.capture("Catalog version probe failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     // MARK: - Sync operations
 
     func syncProfile(_ profile: UserProfile) {

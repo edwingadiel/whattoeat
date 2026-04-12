@@ -14,6 +14,7 @@ final class AppStore: ObservableObject {
     @Published var purchaseError: String?
     @Published var syncStatus: SyncStatus = .idle
     @Published var lastSyncError: String?
+    @Published var catalogRefreshAvailable: Bool = false
 
     var remoteSyncEnabled: Bool { syncCoordinator.isRemoteSyncEnabled }
     var analyticsEnabled: Bool { environment.analytics is PostHogAnalyticsService }
@@ -121,6 +122,34 @@ final class AppStore: ObservableObject {
 
         syncStatus = .synced
         lastSyncError = nil
+
+        await checkCatalogFreshness()
+    }
+
+    /// Compares the backend's published catalog version against the locally
+    /// cached version. Flips `catalogRefreshAvailable` so the UI can surface
+    /// a subtle "new menu data available" affordance. Actual pull of the
+    /// remote catalog tables is a follow-up — today the bundled JSON ships
+    /// with each app release and this just exposes the freshness signal.
+    private func checkCatalogFreshness() async {
+        guard let remoteVersion = await syncCoordinator.fetchCatalogVersion() else { return }
+
+        let localVersion = persistence.loadCatalogVersion()
+
+        if localVersion == nil {
+            // First launch after adopting versioning — seed the cache to the
+            // version baked into the bundled catalog.
+            persistence.saveCatalogVersion(bundledCatalogVersion)
+        }
+
+        let effectiveLocal = persistence.loadCatalogVersion() ?? bundledCatalogVersion
+        catalogRefreshAvailable = remoteVersion != effectiveLocal
+    }
+
+    /// Version string embedded in the bundled seed. Items all share the same
+    /// source_version today; we use the first item's value as the signal.
+    private var bundledCatalogVersion: String {
+        catalog.items.first?.sourceVersion ?? "unknown"
     }
 
     func dismissSyncError() {
